@@ -6,10 +6,9 @@
 const API_URL = "https://api.anthropic.com/v1/messages";
 
 let incomingQueue    = [...INCOMING];
-let triageAutoCount  = 0;
-let triageAngerCount = 0;
-let triageTotal      = 0;
-
+let triageAutoCount  = parseInt(localStorage.getItem('triage_auto')  || '0');
+let triageAngerCount = parseInt(localStorage.getItem('triage_anger') || '0');
+let triageTotal      = parseInt(localStorage.getItem('triage_total') || '0');
 // ── DEMO MODE RESPONSES ──
 const DEMO_RESPONSES = {
   'INC-001': {
@@ -207,4 +206,9 @@ function updateTriageStats() {
   if (autoEl)  autoEl.textContent  = triageAutoCount;
   if (angerEl) angerEl.textContent = triageAngerCount;
   if (totalEl) totalEl.textContent = incomingQueue.length;
+
+  // Save to localStorage so numbers persist after refresh
+  localStorage.setItem('triage_auto',  triageAutoCount);
+  localStorage.setItem('triage_anger', triageAngerCount);
+  localStorage.setItem('triage_total', triageTotal);
 }
