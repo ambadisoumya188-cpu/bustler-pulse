@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bustler Pulse — Ops Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="logo-row">
+        <div class="logo-icon">
+          <svg viewBox="0 0 18 18" fill="none">
+            <polyline points="1,9 4,9 5.5,4 8,14 10,7 12,11 13.5,9 17,9"
+              stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-title">Bustler Pulse</div>
+          <div class="logo-sub">Ops Layer · Pillar 2</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Main</div>
+
+      <button class="nav-item active" onclick="showPage('dashboard', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="1" width="6" height="6" rx="1.5"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5"/>
+        </svg>
+        Dashboard
+      </button>
+
+      <button class="nav-item" onclick="showPage('tickets', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="2" width="14" height="12" rx="2"/>
+          <path d="M4 6h8M4 9h5"/>
+        </svg>
+        All Tickets
+        <span class="nav-badge" id="nb-open">5</span>
+      </button>
+
+      <button class="nav-item" onclick="showPage('triage', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6"/>
+          <path d="M8 5v3l2 2" stroke-linecap="round"/>
+        </svg>
+        AI Triage
+        <span class="nav-badge purple" id="nb-triage">4</span>
+      </button>
+
+      <button class="nav-item" onclick="showPage('agents', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="6" cy="5" r="3"/>
+          <path d="M1 13c0-3 2-5 5-5s5 2 5 5"/>
+          <circle cx="12" cy="5" r="2"/>
+          <path d="M12 9c2 0 3 1.5 3 3.5"/>
+        </svg>
+        Agent Profiles
+      </button>
+
+      <div class="nav-label" style="margin-top:10px">Queues</div>
+
+      <button class="nav-item" onclick="filterAndGo('urgent')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 1L10 6H15L11 9.5L12.5 14.5L8 11.5L3.5 14.5L5 9.5L1 6H6L8 1Z"/>
+        </svg>
+        Urgent Queue
+        <span class="nav-badge" id="nb-urgent">2</span>
+      </button>
+
+      <button class="nav-item" onclick="filterAndGo('dispute')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 10C2 7 4 5 8 5s6 2 6 5"/>
+          <path d="M5 5C5 3 6.5 2 8 2s3 1 3 3"/>
+          <path d="M4 13l1-3M12 13l-1-3"/>
+        </svg>
+        Disputes
+        <span class="nav-badge amber" id="nb-dispute">2</span>
+      </button>
+
+      <button class="nav-item" onclick="filterAndGo('resolved')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6"/>
+          <path d="M5 8l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Resolved Today
+        <span class="nav-badge green" id="nb-resolved">12</span>
+      </button>
+    </nav>
+
+    <div class="sb-footer">
+      <div class="agent-row">
+        <div class="agent-av">AS</div>
+        <div>
+          <div class="agent-name">Ambadi Sajan</div>
+          <div class="agent-role">Ops Intern · Pillar 2</div>
+        </div>
+        <div class="online"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="tb-left">
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="page-sub"   id="page-sub">Welcome back, Ambadi — here's today's overview</div>
+      </div>
+      <div class="tb-right">
+        <div class="time-chip" id="clock">--:--</div>
+        <div class="theme-toggle">
+          <button id="btn-dark" class="active" onclick="setTheme('dark')">
+            <svg viewBox="0 0 13 13" fill="currentColor">
+              <path d="M11 7.5A5 5 0 016 2a5 5 0 100 10 5 5 0 005-4.5z"/>
+            </svg>
+            Dark
+          </button>
+          <button id="btn-light" onclick="setTheme('light')">
+            <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.4">
+              <circle cx="6.5" cy="6.5" r="2.5"/>
+              <path d="M6.5 1v1.2M6.5 10.8V12M1 6.5h1.2M10.8 6.5H12" stroke-linecap="round"/>
+            </svg>
+            Light
+          </button>
+        </div>
+        <div class="status-pill">
+          <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+          System Healthy
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD PAGE -->
+      <div id="page-dashboard" class="page active">
+        <div class="stats-row">
+          <div class="stat">
+            <div class="stat-label">Open Tickets</div>
+            <div class="stat-val" id="s-open">5</div>
+            <div class="stat-sub warn">2 urgent right now</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Resolved Today</div>
+            <div class="stat-val" id="s-resolved">12</div>
+            <div class="stat-sub up">↑ 4 more than yesterday</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Avg Response Time</div>
+            <div class="stat-val">3.4<span style="font-size:14px;color:var(--text3)">h</span></div>
+            <div class="stat-sub up">↓ 1.2h improvement</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Satisfaction Score</div>
+            <div class="stat-val">4.7<span style="font-size:14px;color:var(--text3)">/5</span></div>
+            <div class="stat-sub up">↑ 0.3 this week</div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title">Recent Tickets</div>
+            <div id="dash-recent"></div>
+            <button class="ftab" style="width:100%;margin-top:10px;text-align:center"
+              onclick="showPage('tickets', document.querySelectorAll('.nav-item')[1])">
+              View all tickets →
+            </button>
+          </div>
+          <div class="card">
+            <div class="card-title">Issue Breakdown</div>
+            <div id="breakdown-chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALL TICKETS PAGE -->
+      <div id="page-tickets" class="page">
+        <div class="filter-bar">
+          <div class="filter-tabs">
+            <button class="ftab active" onclick="filterTickets('all', this)">All</button>
+            <button class="ftab" onclick="filterTickets('open', this)">Open</button>
+            <button class="ftab" onclick="filterTickets('progress', this)">In Progress</button>
+            <button class="ftab" onclick="filterTickets('resolved', this)">Resolved</button>
+            <button class="ftab" onclick="filterTickets('urgent', this)">🔴 Urgent</button>
+            <button class="ftab" onclick="filterTickets('dispute', this)">⚠️ Disputes</button>
+          </div>
+          <div class="search-box">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="6" cy="6" r="4"/>
+              <path d="M9.5 9.5L12 12" stroke-linecap="round"/>
+            </svg>
+            <input type="text" placeholder="Search tickets..." oninput="searchTickets(this.value)">
+          </div>
+        </div>
+        <div class="tickets-grid" id="tickets-list"></div>
+      </div>
+
+      <!-- AI TRIAGE PAGE -->
+      <div id="page-triage" class="page">
+        <div class="stats-row">
+          <div class="stat">
+            <div class="stat-label">Incoming Queue</div>
+            <div class="stat-val" id="t-queue-count">4</div>
+            <div class="stat-sub warn">waiting to process</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Auto-processed</div>
+            <div class="stat-val" id="t-auto">0</div>
+            <div class="stat-sub up">by AI today</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Anger Detected</div>
+            <div class="stat-val" id="t-anger">0</div>
+            <div class="stat-sub down">needs priority</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Avg AI Speed</div>
+            <div class="stat-val">2.4<span style="font-size:14px;color:var(--text3)">s</span></div>
+            <div class="stat-sub up">per ticket</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px">
+          <div>
+            <div class="card" style="padding:0;overflow:hidden">
+              <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+                <div class="card-title" style="margin:0">Incoming Complaints — Auto Queue</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <span style="font-size:11px;color:var(--text3)" id="queue-count">4 waiting</span>
+                  <div style="width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite"></div>
+                </div>
+              </div>
+              <div id="incoming-queue" style="max-height:360px;overflow-y:auto"></div>
+              <div style="padding:14px 18px;border-top:1px solid var(--border);background:var(--bg3)">
+                <button class="ai-btn" id="process-all-btn" onclick="processNext()">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="7" cy="7" r="5.5"/>
+                    <path d="M5 7l1.5 1.5L9 5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Process Next with AI
+                </button>
+                <div class="thinking" id="triage-thinking" style="margin-top:10px;margin-bottom:0">
+                  <div class="dots"><span></span><span></span><span></span></div>
+                  <span class="think-txt">Claude AI is analyzing incoming complaint...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-title">Latest AI Analysis</div>
+              <div id="latest-result">
+                <div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2"
+                       style="display:block;margin:0 auto 10px;opacity:.3">
+                    <circle cx="16" cy="16" r="13"/><path d="M16 10v6l4 4"/>
+                  </svg>
+                  Waiting for next complaint to process...
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Smart Routing Rules</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 10px;background:var(--bg3);border-radius:6px">
+                  <span style="color:var(--text2)">🐛 Bug Report</span><span style="color:var(--green);font-weight:500">→ Ambadi Sajan</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 10px;background:var(--bg3);border-radius:6px">
+                  <span style="color:var(--text2)">❓ User Confusion</span><span style="color:var(--blue);font-weight:500">→ Adhilekshmi R</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 10px;background:var(--bg3);border-radius:6px">
+                  <span style="color:var(--text2)">⚠️ Dispute</span><span style="color:var(--amber);font-weight:500">→ Anjali P Remesh</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 10px;background:var(--bg3);border-radius:6px">
+                  <span style="color:var(--text2)">💡 Feature Feedback</span><span style="color:var(--blue);font-weight:500">→ Adhilekshmi R</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 10px;background:var(--rdim);border-radius:6px;border:1px solid rgba(240,82,82,.15)">
+                  <span style="color:var(--text2)">🔴 Critical / Angry</span><span style="color:var(--red);font-weight:500">→ Team Lead</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENT PROFILES PAGE -->
+      <div id="page-agents" class="page">
+        <div class="agents-grid" id="agents-grid"></div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title">Resolution Activity Feed</div>
+            <div id="activity-feed" style="max-height:280px;overflow-y:auto">
+              <div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">
+                No activity yet — resolve a ticket to see it here
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">🏆 Leaderboard</div>
+            <div id="leaderboard">
+              <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">No resolutions yet</div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+              <div class="card-title">Team Stats</div>
+              <div class="grid2" style="gap:8px">
+                <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+                  <div style="font-size:20px;font-weight:600;color:var(--green)" id="team-total">0</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:2px">Total resolved</div>
+                </div>
+                <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+                  <div style="font-size:20px;font-weight:600;color:var(--blue)" id="team-sat">—</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:2px">Avg satisfaction</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TICKET DETAIL PANEL -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
+  <div class="detail-panel" id="detail-panel">
+    <div class="dp-close"><button onclick="closeDetailPanel()">✕ Close</button></div>
+    <div class="dp-id"    id="dp-id"></div>
+    <div class="dp-title" id="dp-title"></div>
+    <div class="dp-tags"  id="dp-tags"></div>
+    <div class="dp-section">
+      <div class="dp-section-label">User Message</div>
+      <div class="dp-message" id="dp-message"></div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-label">Ticket Details</div>
+      <div id="dp-details"></div>
+    </div>
+    <div class="dp-actions">
+      <button class="btn-resolve"  onclick="resolveTicket()">✓ Mark as Resolved</button>
+      <button class="btn-escalate" onclick="escalateTicket()">⚡ Escalate to Dispute Center</button>
+      <button class="btn-cancel"   onclick="closeDetailPanel()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS — order matters! -->
+<script src="data/dummy.js"></script>
+<script src="js/adapter.js"></script>
+<script src="js/agents.js"></script>
+<script src="js/tickets.js"></script>
+<script src="js/triage.js"></script>
+<script src="js/writeback.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
