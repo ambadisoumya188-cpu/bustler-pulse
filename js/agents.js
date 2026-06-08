@@ -5,6 +5,25 @@
 
 // Activity log — stores every resolved ticket
 let activityLog = [];
+function loadAgentStats() {
+  const saved = localStorage.getItem('bustler_agent_stats');
+  if (saved) {
+    const savedAgents = JSON.parse(saved);
+    Object.keys(savedAgents).forEach(name => {
+      if (AGENTS[name]) {
+        AGENTS[name].resolved     = savedAgents[name].resolved || 0;
+        AGENTS[name].categories   = savedAgents[name].categories || {};
+        AGENTS[name].totalTime    = savedAgents[name].totalTime || 0;
+        AGENTS[name].satisfaction = savedAgents[name].satisfaction || [];
+      }
+    });
+  }
+  const savedLog = localStorage.getItem('bustler_activity_log');
+  if (savedLog) {
+    activityLog = JSON.parse(savedLog);
+  }
+}
+loadAgentStats();
 // Load saved agent stats from localStorage on startup
 function loadAgentStats() {
   const saved = localStorage.getItem('bustler_agent_stats');
@@ -203,6 +222,7 @@ function updateAgentOnResolve(agentName, category, timeTaken, satisfaction) {
   agent.categories[category] = (agent.categories[category] || 0) + 1;
   agent.totalTime += timeTaken;
   agent.satisfaction.push(satisfaction);
+  localStorage.setItem('bustler_agent_stats', JSON.stringify(AGENTS));
 
   // Save to localStorage so stats persist after refresh
   localStorage.setItem('bustler_agent_stats', JSON.stringify(AGENTS));
@@ -225,6 +245,7 @@ function logActivity(agentName, ticketId, title, category, sat) {
       minute: '2-digit'
     })
   });
+  localStorage.setItem('bustler_activity_log', JSON.stringify(activityLog));
 
   // Refresh feed if agent page is currently open
   renderActivityFeed();
