@@ -50,6 +50,11 @@ function renderTickets() {
 
   // Apply filters
   let filtered = [...TICKETS];
+  filtered.sort((a, b) => {
+  const numA = parseInt((a.id || a.ticket_id || '0').toString().replace(/\D/g,''));
+  const numB = parseInt((b.id || b.ticket_id || '0').toString().replace(/\D/g,''));
+  return numB - numA;
+});
 
   if (currentFilter === 'open')     filtered = filtered.filter(t => t.status === 'open');
   if (currentFilter === 'progress') filtered = filtered.filter(t => t.status === 'progress');
@@ -208,6 +213,11 @@ function renderDashboard() {
   // Recent tickets list
   const recent = document.getElementById('dash-recent');
   if (recent) {
+    TICKETS.sort((a, b) => {
+  const numA = parseInt((a.id || a.ticket_id || '0').toString().replace(/\D/g,''));
+  const numB = parseInt((b.id || b.ticket_id || '0').toString().replace(/\D/g,''));
+  return numB - numA;
+});
     recent.innerHTML = TICKETS.slice(0, 5).map(t => `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer"
            onclick="openDetail('${t.id}')">
