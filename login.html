@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bustler Pulse — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0e0f11;
+      color: #f0f0f0;
+      font-family: 'DM Sans', sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #16181c;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .logo-box {
+      width: 32px; height: 32px;
+      background: #22c984;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .logo-text { font-size: 18px; font-weight: 600; }
+    .logo-text span { color: #22c984; }
+    h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+    p.sub { color: #9a9da6; font-size: 13px; margin-bottom: 28px; }
+    label { display: block; font-size: 12px; color: #9a9da6; margin-bottom: 6px; }
+    input {
+      width: 100%;
+      background: #1e2127;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #f0f0f0;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus { border-color: #22c984; }
+    button {
+      width: 100%;
+      background: #22c984;
+      color: #0e0f11;
+      border: none;
+      border-radius: 8px;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 4px;
+    }
+    button:hover { opacity: 0.88; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error {
+      background: rgba(240,82,82,0.12);
+      border: 1px solid rgba(240,82,82,0.3);
+      color: #f05252;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .hint {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #5c5f6a;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-box">⚡</div>
+      <div class="logo-text">Bustler <span>Pulse</span></div>
+    </div>
+    <h2>Ops Team Login</h2>
+    <p class="sub">Sign in to access the operations dashboard</p>
+
+    <div class="error" id="errorMsg"></div>
+
+    <label>Username</label>
+    <input type="text" id="username" placeholder="Enter your username" />
+
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter your password" />
+
+    <button id="loginBtn" onclick="handleLogin()">Sign In</button>
+
+    <div class="hint">Bustler Pulse · Internal Ops Tool</div>
+  </div>
+
+  <script>
+    async function handleLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const btn = document.getElementById('loginBtn');
+      const errorMsg = document.getElementById('errorMsg');
+
+      errorMsg.style.display = 'none';
+
+      if (!username || !password) {
+        showError('Please enter both username and password.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        // Try Adhilekshmi's backend first
+        const response = await fetch('https://bustler-pulse.onrender.com/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const token = data.access_token || data.token;
+          sessionStorage.setItem('bp_token', token);
+          sessionStorage.setItem('bp_user', username);
+          window.location.href = 'index.html';
+        } else {
+          // Fallback: mock JWT for testing
+          if (username === 'ops' && password === 'bustler123') {
+            const mockToken = btoa(JSON.stringify({ user: username, role: 'ops', exp: Date.now() + 3600000 }));
+            sessionStorage.setItem('bp_token', mockToken);
+            sessionStorage.setItem('bp_user', username);
+            window.location.href = 'index.html';
+          } else {
+            showError('Invalid credentials. Please try again.');
+          }
+        }
+      } catch (err) {
+        // Backend not reachable — use mock login
+        if (username === 'ops' && password === 'bustler123') {
+          const mockToken = btoa(JSON.stringify({ user: username, role: 'ops', exp: Date.now() + 3600000 }));
+          sessionStorage.setItem('bp_token', mockToken);
+          sessionStorage.setItem('bp_user', username);
+          window.location.href = 'index.html';
+        } else {
+          showError('Invalid credentials. Use ops / bustler123 for demo.');
+        }
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
+  </script>
+</body>
+</html>
