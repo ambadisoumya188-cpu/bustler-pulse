@@ -226,11 +226,12 @@ async function renderFeedback() {
   let feedbackData = [];
   let stats = { avg_csat: 0, total: 0 };
 
-  try {
+ try {
     const [feedRes, statsRes] = await Promise.all([
       fetch('https://bustler-pulse.onrender.com/feedback/'),
       fetch('https://bustler-pulse.onrender.com/feedback/summary/stats')
     ]);
+    if (!feedRes.ok || !statsRes.ok) throw new Error('API not ready');
     feedbackData = await feedRes.json();
     stats = await statsRes.json();
   } catch (e) {
