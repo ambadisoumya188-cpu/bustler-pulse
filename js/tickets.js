@@ -141,14 +141,14 @@ function openDetail(id) {
     <div class="dp-info-row"><span class="dp-info-key">Category</span><span class="dp-info-val">${t.category}</span></div>
     <div class="dp-info-row"><span class="dp-info-key">Urgency</span><span class="dp-info-val">${t.urgency}</span></div>
     <div class="dp-info-row"><span class="dp-info-key">Received</span><span class="dp-info-val">${t.time}</span></div>
-    ${t.screenshot_url ? `
-    <div class="dp-info-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
-      <span class="dp-info-key">Screenshot</span>
-      <img src="https://bustler-pulse.onrender.com${t.screenshot_url}" 
-           style="max-width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.08);margin-top:4px;cursor:pointer;"
-           onclick="window.open('https://bustler-pulse.onrender.com${t.screenshot_url}', '_blank')"
-           title="Click to open full size"/>
-    </div>` : ''}
+  ${t.screenshot_url ? `
+<div class="dp-info-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+  <span class="dp-info-key">Screenshot</span>
+  <img src="${t.screenshot_url.startsWith('http') ? t.screenshot_url : 'https://bustler-pulse.onrender.com' + t.screenshot_url}" 
+       style="max-width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.08);margin-top:4px;cursor:pointer;"
+       onclick="window.open('${t.screenshot_url.startsWith('http') ? t.screenshot_url : 'https://bustler-pulse.onrender.com' + t.screenshot_url}', '_blank')"
+       title="Click to open full size"/>
+</div>` : ''}
   `;
 
   document.getElementById('detail-overlay').classList.add('show');
