@@ -111,7 +111,8 @@ function adaptFromBustler(backendTicket) {
       platform:      backendTicket.platform || backendTicket.bustler_seeker || '',
       device:        backendTicket.device   || backendTicket.ios_android    || '',
       anger_detected: backendTicket.is_anger_flagged === 1,
-      _backend_id:   backendTicket.id
+      _backend_id:   backendTicket.id,
+      screenshot_url: backendTicket.screenshot_url || null
     };
 
   } catch (e) {
