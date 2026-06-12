@@ -247,6 +247,20 @@ async function renderFeedback() {
   }
 
   if (!Array.isArray(feedbackData)) feedbackData = [];
+  if (feedbackData.length === 0) {
+  container.innerHTML = `
+    <div style="padding:28px 32px;">
+      <h2 style="font-size:20px;font-weight:600;margin-bottom:6px;">User Feedback</h2>
+      <p style="color:#9a9da6;font-size:13px;margin-bottom:24px;">Ratings submitted by users after ticket resolution</p>
+      <div style="text-align:center;padding:60px;color:#5c5f6a;background:#16181c;border-radius:12px;border:1px solid rgba(255,255,255,0.07);">
+        <div style="font-size:32px;margin-bottom:12px;">⭐</div>
+        <div style="font-size:15px;margin-bottom:8px;color:#9a9da6;">No feedback yet</div>
+        <div style="font-size:13px;">Feedback will appear here after users rate their resolved tickets</div>
+      </div>
+    </div>
+  `;
+  return;
+}
 
   const avg = stats.avg_csat ? parseFloat(stats.avg_csat).toFixed(1) : 
     feedbackData.length ? (feedbackData.reduce((s,f) => s + f.csat_score, 0) / feedbackData.length).toFixed(1) : '0.0';
