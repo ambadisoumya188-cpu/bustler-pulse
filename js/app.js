@@ -149,7 +149,7 @@ function showPage(name, btn) {
     renderLeaderboard();
     renderActivityFeed();
   }
-  if (name === 'feedback') renderFeedback();
+  if (name === 'feedback') setTimeout(() => renderFeedback(), 100);
 }
 
 // ── FILTER AND GO ──
