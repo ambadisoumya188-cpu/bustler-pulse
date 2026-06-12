@@ -219,23 +219,22 @@ function initApp() {
 // Run when page loads
 window.addEventListener('DOMContentLoaded', initApp);
 // ─── FEEDBACK PAGE ───────────────────────────────────────
+// ─── FEEDBACK PAGE ───────────────────────────────────────
 async function renderFeedback() {
   const container = document.getElementById('page-feedback');
-  container.innerHTML = `<div style="padding:28px 32px;color:#9a9da6;">Loading feedback...</div>`;
+  if (!container) return;
+
+  container.innerHTML = `<div style="padding:28px 32px;color:#9a9da6;font-size:14px;">Loading feedback...</div>`;
 
   let feedbackData = [];
-  let stats = { avg_csat: 0, total: 0 };
+  let avg = '0.0';
 
- try {
-    const [feedRes, statsRes] = await Promise.all([
-      fetch('https://bustler-pulse.onrender.com/feedback/'),
-      fetch('https://bustler-pulse.onrender.com/feedback/summary/stats')
-    ]);
-    if (!feedRes.ok || !statsRes.ok) throw new Error('API not ready');
-    feedbackData = await feedRes.json();
-    stats = await statsRes.json();
+  try {
+    const res = await fetch('https://bustler-pulse.onrender.com/feedback/');
+    if (!res.ok) throw new Error('API error');
+    feedbackData = await res.json();
+    if (!Array.isArray(feedbackData)) feedbackData = [];
   } catch (e) {
-    console.log('Feedback API not available, using dummy data');
     feedbackData = [
       { id:1, user:"Rahul M.", ticket_id:1, csat_score:5, tag:"Fast response", comment:"Issue resolved within minutes!", created_at:"2026-06-08" },
       { id:2, user:"Sneha K.", ticket_id:2, csat_score:4, tag:"Helpful", comment:"Agent was polite and solved my problem.", created_at:"2026-06-07" },
@@ -243,32 +242,15 @@ async function renderFeedback() {
       { id:4, user:"Priya R.", ticket_id:4, csat_score:5, tag:"Excellent", comment:"Best support experience ever!", created_at:"2026-06-06" },
       { id:5, user:"Kiran T.", ticket_id:5, csat_score:2, tag:"Slow", comment:"Waited too long for a response.", created_at:"2026-06-06" },
     ];
-    stats = { avg_csat: 3.8, total: 5 };
   }
 
-  if (!Array.isArray(feedbackData)) feedbackData = [];
-  if (feedbackData.length === 0) {
-  container.innerHTML = `
-    <div style="padding:28px 32px;">
-      <h2 style="font-size:20px;font-weight:600;margin-bottom:6px;">User Feedback</h2>
-      <p style="color:#9a9da6;font-size:13px;margin-bottom:24px;">Ratings submitted by users after ticket resolution</p>
-      <div style="text-align:center;padding:60px;color:#5c5f6a;background:#16181c;border-radius:12px;border:1px solid rgba(255,255,255,0.07);">
-        <div style="font-size:32px;margin-bottom:12px;">⭐</div>
-        <div style="font-size:15px;margin-bottom:8px;color:#9a9da6;">No feedback yet</div>
-        <div style="font-size:13px;">Feedback will appear here after users rate their resolved tickets</div>
-      </div>
-    </div>
-  `;
-  return;
-}
+  if (feedbackData.length > 0) {
+    avg = (feedbackData.reduce((s, f) => s + (f.csat_score || 0), 0) / feedbackData.length).toFixed(1);
+  }
 
-  const avg = stats.avg_csat ? parseFloat(stats.avg_csat).toFixed(1) : 
-    feedbackData.length ? (feedbackData.reduce((s,f) => s + f.csat_score, 0) / feedbackData.length).toFixed(1) : '0.0';
-  const total = stats.total || feedbackData.length;
   const five  = feedbackData.filter(f => f.csat_score === 5).length;
   const four  = feedbackData.filter(f => f.csat_score === 4).length;
   const three = feedbackData.filter(f => f.csat_score <= 3).length;
-
   const stars = r => '⭐'.repeat(r) + '☆'.repeat(5 - r);
 
   const tagColor = tag => {
@@ -280,15 +262,14 @@ async function renderFeedback() {
   };
 
   const formatDate = d => {
-    if (!d) return '';
-    return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    try { return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }); }
+    catch { return ''; }
   };
 
   container.innerHTML = `
     <div style="padding:28px 32px;">
       <h2 style="font-size:20px;font-weight:600;margin-bottom:6px;">User Feedback</h2>
       <p style="color:#9a9da6;font-size:13px;margin-bottom:24px;">Ratings submitted by users after ticket resolution</p>
-
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
         <div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;">
           <div style="font-size:32px;font-weight:700;color:#22c984;">${avg}</div>
@@ -296,7 +277,7 @@ async function renderFeedback() {
           <div style="margin-top:8px;font-size:18px;">${'⭐'.repeat(Math.round(avg))}</div>
         </div>
         <div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;">
-          <div style="font-size:32px;font-weight:700;color:#f0f0f0;">${total}</div>
+          <div style="font-size:32px;font-weight:700;color:#f0f0f0;">${feedbackData.length}</div>
           <div style="color:#9a9da6;font-size:13px;margin-top:4px;">Total Reviews</div>
           <div style="margin-top:8px;font-size:13px;color:#5c5f6a;">from resolved tickets</div>
         </div>
@@ -307,30 +288,25 @@ async function renderFeedback() {
           <div style="font-size:12px;color:#f0f0f0;margin-top:4px;">⭐⭐⭐ or below <span style="color:#f5a623;">${three} reviews</span></div>
         </div>
       </div>
-
-      ${feedbackData.length === 0 ? `
-        <div style="text-align:center;padding:40px;color:#5c5f6a;">No feedback yet</div>
-      ` : `
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          ${feedbackData.map(f => `
-            <div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:16px;">
-              <div style="width:38px;height:38px;border-radius:50%;background:#1e2127;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0;">
-                ${(f.user || '?').charAt(0).toUpperCase()}
-              </div>
-              <div style="flex:1;">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
-                  <span style="font-weight:500;font-size:14px;">${f.user || 'Anonymous'}</span>
-                  ${f.tag ? `<span style="font-size:11px;padding:2px 8px;border-radius:4px;${tagColor(f.tag)}">${f.tag}</span>` : ''}
-                  <span style="color:#5c5f6a;font-size:12px;margin-left:auto;">${formatDate(f.created_at)}</span>
-                </div>
-                <div style="font-size:14px;margin-bottom:6px;">${stars(f.csat_score || 0)}</div>
-                <div style="color:#9a9da6;font-size:13px;">${f.comment || ''}</div>
-                <div style="color:#5c5f6a;font-size:11px;margin-top:6px;">Ticket #${f.ticket_id}</div>
-              </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        ${feedbackData.map(f => `
+          <div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:16px;">
+            <div style="width:38px;height:38px;border-radius:50%;background:#1e2127;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0;">
+              ${(f.user || '?').charAt(0).toUpperCase()}
             </div>
-          `).join('')}
-        </div>
-      `}
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
+                <span style="font-weight:500;font-size:14px;">${f.user || 'Anonymous'}</span>
+                ${f.tag ? `<span style="font-size:11px;padding:2px 8px;border-radius:4px;${tagColor(f.tag)}">${f.tag}</span>` : ''}
+                <span style="color:#5c5f6a;font-size:12px;margin-left:auto;">${formatDate(f.created_at)}</span>
+              </div>
+              <div style="font-size:14px;margin-bottom:6px;">${stars(f.csat_score || 0)}</div>
+              <div style="color:#9a9da6;font-size:13px;">${f.comment || ''}</div>
+              <div style="color:#5c5f6a;font-size:11px;margin-top:6px;">Ticket #${f.ticket_id}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
     </div>
   `;
 }
