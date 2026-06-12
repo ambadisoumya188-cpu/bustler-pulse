@@ -129,14 +129,14 @@ function showPage(name, btn) {
     tickets:   'All Tickets',
     triage:    'AI Triage',
     agents:    'Agent Profiles',
-    feedback: 'User Feedback',
+  
   };
   const subs = {
     dashboard: "Welcome back, Ambadi — here's today's overview",
     tickets:   'Manage and resolve incoming user tickets',
     triage:    'Complaints arrive automatically — AI classifies and routes them',
     agents:    'Live performance profiles — updates every time a ticket is resolved',
-    feedback: 'Ratings and comments submitted by users after resolution',
+    
   };
 
   const titleEl = document.getElementById('page-title');
@@ -149,7 +149,7 @@ function showPage(name, btn) {
     renderLeaderboard();
     renderActivityFeed();
   }
-  if (name === 'feedback') setTimeout(() => renderFeedback(), 100);
+  
 }
 
 // ── FILTER AND GO ──
@@ -218,95 +218,4 @@ function initApp() {
 
 // Run when page loads
 window.addEventListener('DOMContentLoaded', initApp);
-// ─── FEEDBACK PAGE ───────────────────────────────────────
-// ─── FEEDBACK PAGE ───────────────────────────────────────
-async function renderFeedback() {
-  const container = document.getElementById('page-feedback');
-  if (!container) return;
 
-  container.innerHTML = `<div style="padding:28px 32px;color:#9a9da6;font-size:14px;">Loading feedback...</div>`;
-
-  let feedbackData = [];
-  let avg = '0.0';
-
-  try {
-    const res = await fetch('https://bustler-pulse.onrender.com/feedback/');
-    if (!res.ok) throw new Error('API error');
-    feedbackData = await res.json();
-    if (!Array.isArray(feedbackData)) feedbackData = [];
-  } catch (e) {
-    feedbackData = [
-      { id:1, user:"Rahul M.", ticket_id:1, csat_score:5, tag:"Fast response", comment:"Issue resolved within minutes!", created_at:"2026-06-08" },
-      { id:2, user:"Sneha K.", ticket_id:2, csat_score:4, tag:"Helpful", comment:"Agent was polite and solved my problem.", created_at:"2026-06-07" },
-      { id:3, user:"Arjun P.", ticket_id:3, csat_score:3, tag:"Average", comment:"Took a bit long but resolved.", created_at:"2026-06-07" },
-      { id:4, user:"Priya R.", ticket_id:4, csat_score:5, tag:"Excellent", comment:"Best support experience ever!", created_at:"2026-06-06" },
-      { id:5, user:"Kiran T.", ticket_id:5, csat_score:2, tag:"Slow", comment:"Waited too long for a response.", created_at:"2026-06-06" },
-    ];
-  }
-
-  if (feedbackData.length > 0) {
-    avg = (feedbackData.reduce((s, f) => s + (f.csat_score || 0), 0) / feedbackData.length).toFixed(1);
-  }
-
-  const five  = feedbackData.filter(f => f.csat_score === 5).length;
-  const four  = feedbackData.filter(f => f.csat_score === 4).length;
-  const three = feedbackData.filter(f => f.csat_score <= 3).length;
-  const stars = r => '⭐'.repeat(r) + '☆'.repeat(5 - r);
-
-  const tagColor = tag => {
-    if (!tag) return 'color:#9a9da6;background:rgba(255,255,255,0.05);';
-    if (tag === 'Fast response' || tag === 'Excellent') return 'color:#22c984;background:rgba(34,201,132,0.1);';
-    if (tag === 'Helpful') return 'color:#4e9eff;background:rgba(78,158,255,0.1);';
-    if (tag === 'Slow') return 'color:#f05252;background:rgba(240,82,82,0.1);';
-    return 'color:#f5a623;background:rgba(245,166,35,0.1);';
-  };
-
-  const formatDate = d => {
-    try { return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }); }
-    catch { return ''; }
-  };
-
-  container.innerHTML = `
-    <div style="padding:28px 32px;">
-      <h2 style="font-size:20px;font-weight:600;margin-bottom:6px;">User Feedback</h2>
-      <p style="color:#9a9da6;font-size:13px;margin-bottom:24px;">Ratings submitted by users after ticket resolution</p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
-        <div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;">
-          <div style="font-size:32px;font-weight:700;color:#22c984;">${avg}</div>
-          <div style="color:#9a9da6;font-size:13px;margin-top:4px;">Average CSAT Score</div>
-          <div style="margin-top:8px;font-size:18px;">${'⭐'.repeat(Math.round(avg))}</div>
-        </div>
-        <div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;">
-          <div style="font-size:32px;font-weight:700;color:#f0f0f0;">${feedbackData.length}</div>
-          <div style="color:#9a9da6;font-size:13px;margin-top:4px;">Total Reviews</div>
-          <div style="margin-top:8px;font-size:13px;color:#5c5f6a;">from resolved tickets</div>
-        </div>
-        <div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;">
-          <div style="font-size:13px;color:#9a9da6;margin-bottom:8px;">Rating Breakdown</div>
-          <div style="font-size:12px;color:#f0f0f0;">⭐⭐⭐⭐⭐ <span style="color:#22c984;">${five} reviews</span></div>
-          <div style="font-size:12px;color:#f0f0f0;margin-top:4px;">⭐⭐⭐⭐ <span style="color:#4e9eff;">${four} reviews</span></div>
-          <div style="font-size:12px;color:#f0f0f0;margin-top:4px;">⭐⭐⭐ or below <span style="color:#f5a623;">${three} reviews</span></div>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        ${feedbackData.map(f => `
-          <div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:16px;">
-            <div style="width:38px;height:38px;border-radius:50%;background:#1e2127;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0;">
-              ${(f.user || '?').charAt(0).toUpperCase()}
-            </div>
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
-                <span style="font-weight:500;font-size:14px;">${f.user || 'Anonymous'}</span>
-                ${f.tag ? `<span style="font-size:11px;padding:2px 8px;border-radius:4px;${tagColor(f.tag)}">${f.tag}</span>` : ''}
-                <span style="color:#5c5f6a;font-size:12px;margin-left:auto;">${formatDate(f.created_at)}</span>
-              </div>
-              <div style="font-size:14px;margin-bottom:6px;">${stars(f.csat_score || 0)}</div>
-              <div style="color:#9a9da6;font-size:13px;">${f.comment || ''}</div>
-              <div style="color:#5c5f6a;font-size:11px;margin-top:6px;">Ticket #${f.ticket_id}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
