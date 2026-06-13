@@ -121,6 +121,7 @@ html, body {
 /* ── PAGES ── */
 .page { display: none; }
 .page.active { display: block; animation: fadeUp .2s ease; }
+#page-feedback.active { display: block !important; min-height: 200px; }
 
 /* ══════════════════════════════════════
    STAT CARDS
