@@ -128,15 +128,15 @@ function showPage(name, btn) {
     dashboard: 'Dashboard',
     tickets:   'All Tickets',
     triage:    'AI Triage',
-   agents:    'Agent Profiles',
+    agents:    'Agent Profiles',
     feedback:  'User Feedback',
   };
-  
+
   const subs = {
     dashboard: "Welcome back, Ambadi — here's today's overview",
     tickets:   'Manage and resolve incoming user tickets',
     triage:    'Complaints arrive automatically — AI classifies and routes them',
-   agents:    'Live performance profiles — updates every time a ticket is resolved',
+    agents:    'Live performance profiles — updates every time a ticket is resolved',
     feedback:  'Ratings submitted by users after resolution',
   };
 
@@ -150,8 +150,10 @@ function showPage(name, btn) {
     renderLeaderboard();
     renderActivityFeed();
   }
-  if (name === 'feedback') renderFeedback();
-  
+
+  if (name === 'feedback') {
+    renderFeedback();   // ✅ use renderFeedback, not loadFeedback
+  }
 }
 
 // ── FILTER AND GO ──
