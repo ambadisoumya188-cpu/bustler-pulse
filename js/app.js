@@ -130,6 +130,7 @@ function showPage(name, btn) {
     triage:    'AI Triage',
     agents:    'Agent Profiles',
     feedback:  'User Feedback',
+    health:    'System Health',
   };
 
   const subs = {
@@ -138,6 +139,7 @@ function showPage(name, btn) {
     triage:    'Complaints arrive automatically — AI classifies and routes them',
     agents:    'Live performance profiles — updates every time a ticket is resolved',
     feedback:  'Ratings submitted by users after resolution',
+    health:    'Track and manage known issues across Bustler',
   };
 
   const titleEl = document.getElementById('page-title');
@@ -152,10 +154,13 @@ function showPage(name, btn) {
   }
 
   if (name === 'feedback') {
-    renderFeedback();   // ✅ use renderFeedback, not loadFeedback
+    renderFeedback();
+  }
+
+  if (name === 'health') {
+    renderHealth();
   }
 }
-
 // ── FILTER AND GO ──
 function filterAndGo(filter) {
   currentFilter = filter;
