@@ -83,58 +83,8 @@ function getTimeAgo(dateStr) {
   return Math.floor(diff / 1440) + 'd ago';
 }
 
-function showAddIssueForm() {
-  document.getElementById('health-form').style.display = 'block';
-}
 
-function hideAddIssueForm() {
-  document.getElementById('health-form').style.display = 'none';
-  document.getElementById('h-title').value = '';
-  document.getElementById('h-desc').value  = '';
-}
 
-async function addIssue() {
-  const title = document.getElementById('h-title').value.trim();
-  const desc  = document.getElementById('h-desc').value.trim();
-  const sev   = document.getElementById('h-severity').value;
 
-  if (!title) {
-    alert('Please enter an issue title');
-    return;
-  }
 
-  try {
-    const res = await fetch('https://bustler-pulse.onrender.com/health/', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title:       title,
-        description: desc,
-        status:      'watching',
-        severity:    sev
-      })
-    });
 
-    if (res.ok) {
-      hideAddIssueForm();
-      renderHealth(); // refresh the list
-    } else {
-      alert('Failed to add issue. Try again.');
-    }
-
-  } catch(e) {
-    alert('Could not connect to backend: ' + e.message);
-  }
-}
-function updateIssueStatus(id, newStatus) {
-  const issue = healthIssues.find(i => i.id === id);
-  if (issue) {
-    issue.status = newStatus;
-    renderHealth();
-  }
-}
-
-function deleteIssue(id) {
-  healthIssues = healthIssues.filter(i => i.id !== id);
-  renderHealth();
-}
