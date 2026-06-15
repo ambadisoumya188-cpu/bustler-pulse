@@ -10,10 +10,11 @@ async function renderHealth() {
     // Update stats
     document.getElementById('h-active').textContent  = data.open_tickets     || 0;
     document.getElementById('h-fixing').textContent  = data.critical_tickets  || 0;
-    document.getElementById('h-watching').textContent = data.open_tickets     || 0;
+    document.getElementById('h-watching').textContent = data.status || '—';
     document.getElementById('h-resolved').textContent = data.resolved_today   || 0;
 
     const list = document.getElementById('health-list');
+    if (!list) return;
 
     // Status color
     const statusColor = {
