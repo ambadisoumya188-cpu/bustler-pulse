@@ -203,6 +203,14 @@ function startAutoRefresh() {
   setInterval(() => {
     fetchRealTickets();
   }, 30000);
+   // Auto refresh feedback every 30 seconds too
+  setInterval(() => {
+    const feedbackPage = document.getElementById('page-feedback');
+    if (feedbackPage && feedbackPage.classList.contains('active')) {
+      renderFeedback();
+    }
+  }, 30000);
+}
 }
 
 // ── INITIALISE APP ──
