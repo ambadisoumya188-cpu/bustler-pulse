@@ -228,38 +228,50 @@ function initApp() {
 // Run when page loads
 window.addEventListener('DOMContentLoaded', initApp);
 function renderFeedback() {
-  const c = document.getElementById('page-feedback');
-  if (!c) return;
-  c.innerHTML = '<div style="padding:28px;color:#9a9da6;">Loading...</div>';
+  const list = document.getElementById('feedback-list');
+  if (!list) return;
+
+  list.innerHTML = '<div style="padding:28px;color:#9a9da6;text-align:center">Loading...</div>';
+
   fetch('https://bustler-pulse.onrender.com/feedback/')
     .then(r => r.json())
     .then(data => {
+      // Update stats
+      document.getElementById('fb-total').textContent = data.length;
+
+      const scores = data.map(f => f.csat_score).filter(s => s);
+      const avg = scores.length
+        ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
+        : '—';
+      document.getElementById('fb-avg').textContent    = avg;
+      document.getElementById('fb-positive').textContent = scores.filter(s => s >= 4).length;
+      document.getElementById('fb-negative').textContent = scores.filter(s => s <= 2).length;
+
       if (!data.length) {
-        c.innerHTML = '<div style="padding:28px;text-align:center;color:#5c5f6a;font-size:14px;">⭐ No feedback yet</div>';
+        list.innerHTML = '<div style="padding:28px;text-align:center;color:#5c5f6a;font-size:14px;">⭐ No feedback yet</div>';
         return;
       }
-      c.innerHTML = '<div style="padding:28px 32px;">' +
-        data.map(f =>
-          '<div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px;margin-bottom:12px;display:flex;gap:16px;">' +
-            '<div style="width:38px;height:38px;border-radius:50%;background:#1e2127;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;">' +
-              (f.user||'?').charAt(0).toUpperCase() +
+
+      list.innerHTML = data.map(f =>
+        '<div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px;margin-bottom:12px;display:flex;gap:16px;">' +
+          '<div style="width:38px;height:38px;border-radius:50%;background:#1e2127;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;">' +
+            (f.user||'?').charAt(0).toUpperCase() +
+          '</div>' +
+          '<div style="flex:1;">' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+              '<span style="font-weight:500;font-size:14px;">' + (f.user||'Anonymous') + '</span>' +
+              '<span style="color:#5c5f6a;font-size:12px;">' + new Date(f.created_at).toLocaleDateString() + '</span>' +
             '</div>' +
-            '<div style="flex:1;">' +
-              '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
-                '<span style="font-weight:500;font-size:14px;">' + (f.user||'Anonymous') + '</span>' +
-                '<span style="color:#5c5f6a;font-size:12px;">' + new Date(f.created_at).toLocaleDateString() + '</span>' +
-              '</div>' +
-              '<div style="font-size:14px;margin-bottom:6px;">' + '⭐'.repeat(f.csat_score||0) + '</div>' +
-              '<div style="color:#9a9da6;font-size:13px;">' + (f.comment||'') + '</div>' +
-              (f.tag ? '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(34,201,132,0.1);color:#22c984;margin-top:6px;display:inline-block;">' + f.tag + '</span>' : '') +
-              '<div style="color:#5c5f6a;font-size:11px;margin-top:6px;">Ticket #' + f.ticket_id + '</div>' +
-            '</div>' +
-          '</div>'
-        ).join('') +
-      '</div>';
+            '<div style="font-size:14px;margin-bottom:6px;">' + '⭐'.repeat(f.csat_score||0) + '</div>' +
+            '<div style="color:#9a9da6;font-size:13px;">' + (f.comment||'') + '</div>' +
+            (f.tag ? '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(34,201,132,0.1);color:#22c984;margin-top:6px;display:inline-block;">' + f.tag + '</span>' : '') +
+            '<div style="color:#5c5f6a;font-size:11px;margin-top:6px;">Ticket #' + f.ticket_id + '</div>' +
+          '</div>' +
+        '</div>'
+      ).join('');
     })
     .catch(() => {
-      c.innerHTML = '<div style="padding:28px;text-align:center;color:#5c5f6a;">Could not load feedback</div>';
+      list.innerHTML = '<div style="padding:28px;text-align:center;color:#5c5f6a;">Could not load feedback</div>';
     });
 }
 
