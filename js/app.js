@@ -211,7 +211,7 @@ function startAutoRefresh() {
     }
   }, 30000);
 }
-}
+
 
 // ── INITIALISE APP ──
 function initApp() {
