@@ -30,13 +30,26 @@ async function fetchRealTickets() {
       const realTickets = adaptManyFromBustler(data);
 
       // Merge real tickets with dummy tickets
-      // Real tickets go first, dummy tickets fill the rest
       realTickets.forEach(realTicket => {
         const exists = TICKETS.find(t => t._backend_id === realTicket._backend_id);
         if (!exists) {
           TICKETS.unshift(realTicket);
         }
       });
+
+      // Add new tickets into AI Triage incoming queue too
+      realTickets.forEach(realTicket => {
+        const alreadyInQueue = incomingQueue.find(q => q.id === ('#' + realTicket._backend_id));
+        if (alreadyInQueue) return;
+
+        incomingQueue.push({
+          id:   '#' + realTicket._backend_id,
+          user: realTicket.user || 'Unknown User',
+          msg:  realTicket.title || realTicket.description || 'New complaint',
+          time: 'Just now'
+        });
+      });
+      renderIncomingQueue();
 
       // Update stats
       const openCount = TICKETS.filter(t => t.status === 'open' || t.status === 'progress').length;
@@ -69,7 +82,7 @@ async function sendResolutionToBackend(ticket) {
       {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({
+        body: JSON.stringify({
           resolution_notes: 'Resolved by ' + ticket.agent,
           what_broke:       ticket.category + ' — ' + ticket.title,
           why_it_happened:  'Issue identified and investigated by ops team',
@@ -95,8 +108,8 @@ function showConnectionStatus(connected, count) {
   if (!pill) return;
 
   if (connected) {
-    pill.style.background = 'var(--gdim)';
-    pill.style.color      = 'var(--green)';
+    pill.style.background  = 'var(--gdim)';
+    pill.style.color       = 'var(--green)';
     pill.style.borderColor = 'var(--gborder)';
     pill.innerHTML = `
       <svg width="8" height="8" viewBox="0 0 8 8">
@@ -161,6 +174,7 @@ function showPage(name, btn) {
     renderHealth();
   }
 }
+
 // ── FILTER AND GO ──
 function filterAndGo(filter) {
   currentFilter = filter;
@@ -198,12 +212,12 @@ function setTheme(theme) {
 }
 
 // ── AUTO REFRESH ──
-// Fetch new tickets every 30 seconds automatically
 function startAutoRefresh() {
   setInterval(() => {
     fetchRealTickets();
   }, 30000);
-   // Auto refresh feedback every 30 seconds too
+
+  // Auto refresh feedback every 30 seconds too
   setInterval(() => {
     const feedbackPage = document.getElementById('page-feedback');
     if (feedbackPage && feedbackPage.classList.contains('active')) {
@@ -212,10 +226,10 @@ function startAutoRefresh() {
   }, 30000);
 }
 
-
 // ── INITIALISE APP ──
 function initApp() {
-   loadAgentStats();
+  loadAgentStats();
+
   // Load saved theme
   const savedTheme = localStorage.getItem('bustler-theme') || 'dark';
   setTheme(savedTheme);
@@ -235,6 +249,8 @@ function initApp() {
 
 // Run when page loads
 window.addEventListener('DOMContentLoaded', initApp);
+
+// ── RENDER FEEDBACK ──
 function renderFeedback() {
   const list = document.getElementById('feedback-list');
   if (!list) return;
@@ -251,7 +267,7 @@ function renderFeedback() {
       const avg = scores.length
         ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
         : '—';
-      document.getElementById('fb-avg').textContent    = avg;
+      document.getElementById('fb-avg').textContent      = avg;
       document.getElementById('fb-positive').textContent = scores.filter(s => s >= 4).length;
       document.getElementById('fb-negative').textContent = scores.filter(s => s <= 2).length;
 
@@ -282,4 +298,3 @@ function renderFeedback() {
       list.innerHTML = '<div style="padding:28px;text-align:center;color:#5c5f6a;">Could not load feedback</div>';
     });
 }
-
