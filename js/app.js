@@ -36,6 +36,7 @@ async function fetchRealTickets() {
           TICKETS.unshift(realTicket);
         }
       });
+      checkForCriticalTickets(realTickets); 
 
       // Add new tickets into AI Triage incoming queue too
       realTickets.forEach(realTicket => {
@@ -126,6 +127,62 @@ function showConnectionStatus(connected, count) {
       </svg>
       Demo Mode — backend offline`;
   }
+}
+// ── CRITICAL TICKET NOTIFICATIONS ──
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+}
+
+function checkForCriticalTickets(newTickets) {
+  const criticalOnes = newTickets.filter(t => 
+    t.priority === 'critical' || t.priority === 'urgent' || t.angry === true
+  );
+
+  if (criticalOnes.length > 0) {
+    criticalOnes.forEach(ticket => {
+      showCriticalAlert(ticket);
+    });
+  }
+}
+
+function showCriticalAlert(ticket) {
+  // Browser notification
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('🔴 Critical Ticket Alert!', {
+      body: (ticket.user || 'User') + ': ' + (ticket.title || ticket.description || 'Urgent issue reported'),
+      icon: 'https://cdn-icons-png.flaticon.com/512/564/564619.png'
+    });
+  }
+
+  // In-page toast alert (works even if browser notifications are blocked)
+  showToast('🔴 Critical ticket from ' + (ticket.user || 'a user') + '!');
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--red);
+    color: white;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 9999;
+    animation: slideIn 0.3s ease;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
 }
 
 // ── PAGE NAVIGATION ──
@@ -228,6 +285,7 @@ function startAutoRefresh() {
 
 // ── INITIALISE APP ──
 function initApp() {
+   requestNotificationPermission();
   loadAgentStats();
 
   // Load saved theme
