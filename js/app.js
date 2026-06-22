@@ -4,6 +4,7 @@
 // ══════════════════════════════════════
 
 const BACKEND_URL = 'https://bustler-pulse.onrender.com';
+let notifiedTicketIds = new Set();
 
 // ── CLOCK ──
 function updateClock() {
@@ -143,6 +144,7 @@ function checkForCriticalTickets(newTickets) {
   if (criticalOnes.length > 0) {
     criticalOnes.forEach(ticket => {
       showCriticalAlert(ticket);
+      notifiedTicketIds.add(ticket.id);
     });
   }
 }
