@@ -36,7 +36,7 @@ async function fetchRealTickets() {
           TICKETS.unshift(realTicket);
         }
       });
-      checkForCriticalTickets(realTickets); 
+      checkForCriticalTickets(data);   // use raw backend data, before adapter changes field names
 
       // Add new tickets into AI Triage incoming queue too
       realTickets.forEach(realTicket => {
@@ -137,7 +137,7 @@ function requestNotificationPermission() {
 
 function checkForCriticalTickets(newTickets) {
   const criticalOnes = newTickets.filter(t => 
-    t.priority === 'critical' || t.priority === 'urgent' || t.angry === true
+    t.urgency === 'critical' || t.is_anger_flagged === 1
   );
 
   if (criticalOnes.length > 0) {
@@ -148,16 +148,14 @@ function checkForCriticalTickets(newTickets) {
 }
 
 function showCriticalAlert(ticket) {
-  // Browser notification
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification('🔴 Critical Ticket Alert!', {
-      body: (ticket.user || 'User') + ': ' + (ticket.title || ticket.description || 'Urgent issue reported'),
+      body: (ticket.user_id || 'User') + ': ' + (ticket.description || 'Urgent issue reported'),
       icon: 'https://cdn-icons-png.flaticon.com/512/564/564619.png'
     });
   }
 
-  // In-page toast alert (works even if browser notifications are blocked)
-  showToast('🔴 Critical ticket from ' + (ticket.user || 'a user') + '!');
+  showToast('🔴 Critical ticket from ' + (ticket.user_id || 'a user') + '!');
 }
 
 function showToast(message) {
