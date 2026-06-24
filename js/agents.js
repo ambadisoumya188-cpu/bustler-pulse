@@ -215,6 +215,8 @@ function renderActivityFeed() {
 
 // ── UPDATE AGENT STATS ON RESOLVE ──
 // Called by tickets.js when a ticket is resolved
+// ── UPDATE AGENT STATS ON RESOLVE ──
+// Called by tickets.js when a ticket is resolved
 function updateAgentOnResolve(agentName, category, timeTaken, satisfaction) {
   const agent = AGENTS[agentName];
   if (!agent) return;
