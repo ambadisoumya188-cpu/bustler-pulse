@@ -220,6 +220,8 @@ function updateAgentOnResolve(agentName, category, timeTaken, satisfaction) {
   if (!agent) return;
   agent.resolved++;
   agent.categories[category] = (agent.categories[category] || 0) + 1;
+  const validTime = isNaN(timeTaken) ? 0 : parseFloat(timeTaken);
+  agent.totalTime += validTime;
   agent.totalTime += timeTaken;
   agent.satisfaction.push(satisfaction);
   localStorage.setItem('bustler_agent_stats', JSON.stringify(AGENTS));
