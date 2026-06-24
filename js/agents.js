@@ -5,6 +5,8 @@
 
 // Activity log — stores every resolved ticket
 let activityLog = [];
+
+// Load saved agent stats from localStorage on startup
 function loadAgentStats() {
   const saved = localStorage.getItem('bustler_agent_stats');
   if (saved) {
@@ -21,22 +23,6 @@ function loadAgentStats() {
   const savedLog = localStorage.getItem('bustler_activity_log');
   if (savedLog) {
     activityLog = JSON.parse(savedLog);
-  }
-}
-loadAgentStats();
-// Load saved agent stats from localStorage on startup
-function loadAgentStats() {
-  const saved = localStorage.getItem('bustler_agent_stats');
-  if (saved) {
-    const savedAgents = JSON.parse(saved);
-    Object.keys(savedAgents).forEach(name => {
-      if (AGENTS[name]) {
-        AGENTS[name].resolved     = savedAgents[name].resolved || 0;
-        AGENTS[name].categories   = savedAgents[name].categories || {};
-        AGENTS[name].totalTime    = savedAgents[name].totalTime || 0;
-        AGENTS[name].satisfaction = savedAgents[name].satisfaction || [];
-      }
-    });
   }
 }
 loadAgentStats();
@@ -74,8 +60,6 @@ function renderAgentCards() {
 
   grid.innerHTML = Object.entries(AGENTS).map(([name, a]) => `
     <div class="agent-card">
-
-      <!-- Top row: avatar + name -->
       <div class="ac-top">
         <div class="ac-av" style="background:${a.dimColor};color:${a.color};border:1px solid ${a.borderColor}">
           ${a.initials}
@@ -86,7 +70,6 @@ function renderAgentCards() {
         </div>
       </div>
 
-      <!-- Stats -->
       <div class="ac-stat">
         <span class="ac-key">Tickets resolved</span>
         <span class="ac-val" style="color:${a.resolved > 0 ? 'var(--green)' : 'var(--text)'}">
@@ -108,14 +91,11 @@ function renderAgentCards() {
         <span class="ac-val" style="color:var(--green)">● Online</span>
       </div>
 
-      <!-- Speciality tag -->
       <div class="spec-tag">${getSpeciality(a)}</div>
 
-      <!-- Performance bar -->
       <div class="score-track">
         <div class="score-fill" style="width:${getScorePercent(a)}%"></div>
       </div>
-
     </div>
   `).join('');
 }
@@ -125,12 +105,10 @@ function renderLeaderboard() {
   const lb = document.getElementById('leaderboard');
   if (!lb) return;
 
-  // Sort agents by resolved count
   const ranked = Object.entries(AGENTS)
     .filter(([, a]) => a.resolved > 0)
     .sort((a, b) => b[1].resolved - a[1].resolved);
 
-  // No resolutions yet
   if (ranked.length === 0) {
     lb.innerHTML = `
       <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">
@@ -152,7 +130,6 @@ function renderLeaderboard() {
     </div>
   `).join('');
 
-  // Update team stats
   const totalResolved = Object.values(AGENTS).reduce((s, a) => s + a.resolved, 0);
   const allSat        = Object.values(AGENTS).flatMap(a => a.satisfaction);
   const avgSat        = allSat.length
@@ -186,7 +163,6 @@ function renderActivityFeed() {
     'General Issue':    'tag-confusion'
   };
 
-  // Show newest first
   feed.innerHTML = activityLog.slice().reverse().map(log => {
     const agent = AGENTS[log.agent] || {};
     return `
@@ -215,20 +191,17 @@ function renderActivityFeed() {
 
 // ── UPDATE AGENT STATS ON RESOLVE ──
 // Called by tickets.js when a ticket is resolved
-// ── UPDATE AGENT STATS ON RESOLVE ──
-// Called by tickets.js when a ticket is resolved
 function updateAgentOnResolve(agentName, category, timeTaken, satisfaction) {
   const agent = AGENTS[agentName];
   if (!agent) return;
+
   agent.resolved++;
   agent.categories[category] = (agent.categories[category] || 0) + 1;
+
   const validTime = isNaN(timeTaken) ? 0 : parseFloat(timeTaken);
   agent.totalTime += validTime;
-  agent.totalTime += timeTaken;
-  agent.satisfaction.push(satisfaction);
-  localStorage.setItem('bustler_agent_stats', JSON.stringify(AGENTS));
 
-  // Save to localStorage so stats persist after refresh
+  agent.satisfaction.push(satisfaction);
   localStorage.setItem('bustler_agent_stats', JSON.stringify(AGENTS));
 
   renderAgentCards();
@@ -251,6 +224,5 @@ function logActivity(agentName, ticketId, title, category, sat) {
   });
   localStorage.setItem('bustler_activity_log', JSON.stringify(activityLog));
 
-  // Refresh feed if agent page is currently open
   renderActivityFeed();
 }
