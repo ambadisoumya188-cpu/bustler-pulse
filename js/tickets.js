@@ -207,10 +207,20 @@ function resolveTicket() {
 }
 
 // ── ESCALATE TICKET ──
-function escalateTicket() {
+async function escalateTicket() {
   if (!selectedTicket) return;
   selectedTicket.route  = 'dispute';
   selectedTicket.status = 'progress';
+
+  // Send to backend
+  if (selectedTicket._backend_id) {
+    await fetch(BACKEND_URL + '/tickets/' + selectedTicket._backend_id + '/escalate', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'progress', category: 'dispute' })
+    });
+  }
+
   closeDetailPanel();
   renderTickets();
   alert('⚡ Ticket escalated to Dispute Center and assigned to Anjali P Remesh.');
