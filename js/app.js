@@ -138,7 +138,8 @@ function requestNotificationPermission() {
 
 function checkForCriticalTickets(newTickets) {
   const criticalOnes = newTickets.filter(t => 
-    t.urgency === 'critical' || t.is_anger_flagged === 1
+    (t.urgency === 'critical' || t.is_anger_flagged === 1) && 
+    !notifiedTicketIds.has(t.id)
   );
 
   if (criticalOnes.length > 0) {
