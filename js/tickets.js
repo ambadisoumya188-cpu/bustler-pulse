@@ -172,9 +172,11 @@ function resolveTicket() {
   selectedTicket.status = 'resolved';
 
   // Calculate REAL response time from actual timestamps
-  const createdAt = selectedTicket.created_at ? new Date(selectedTicket.created_at) : new Date();
-  const resolvedAt = new Date();
-  const timeTaken = ((resolvedAt - createdAt) / (1000 * 60 * 60)).toFixed(1); // hours
+ const createdAt = selectedTicket.created_at 
+  ? new Date(selectedTicket.created_at + 'Z') 
+  : new Date();
+const resolvedAt = new Date();
+const timeTaken = ((resolvedAt - createdAt) / (1000 * 60 * 60)).toFixed(1); // hours // hours
 
   // Satisfaction still uses placeholder until linked to real feedback
   const satisfaction = parseFloat((Math.random() * 1 + 4).toFixed(1));
