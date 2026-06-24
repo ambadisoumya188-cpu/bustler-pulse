@@ -214,10 +214,40 @@ const timeTaken = ((resolvedAt - createdAt) / (1000 * 60 * 60)).toFixed(1); // h
 }
 
 // ── ESCALATE TICKET ──
-function escalateTicket() {
+async function escalateTicket() {
   if (!selectedTicket) return;
+
   selectedTicket.route  = 'dispute';
   selectedTicket.status = 'progress';
+
+  // Send to backend
+  if (selectedTicket._backend_id) {
+    try {
+      const res = await fetch(BACKEND_URL + '/tickets/' + selectedTicket._backend_id + '/escalate', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reason: 'Customer requires senior agent attention'
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Ticket escalated successfully on backend:', data.message);
+      } else if (res.status === 400) {
+        alert('⚠️ This ticket is already resolved and cannot be escalated.');
+        return;
+      } else if (res.status === 404) {
+        alert('⚠️ Ticket not found on backend.');
+        return;
+      } else {
+        console.log('Escalate API error:', res.status);
+      }
+    } catch (e) {
+      console.log('Could not escalate on backend:', e.message);
+    }
+  }
+
   closeDetailPanel();
   renderTickets();
   alert('⚡ Ticket escalated to Dispute Center and assigned to Anjali P Remesh.');
