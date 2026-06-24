@@ -150,6 +150,10 @@ function openDetail(id) {
        title="Click to open full size"/>
 </div>` : ''}
   `;
+  const escalateBtn = document.getElementById('btn-escalate');
+if (escalateBtn) {
+  escalateBtn.style.display = (t.status === 'resolved') ? 'none' : 'block';
+}
 
   document.getElementById('detail-overlay').classList.add('show');
 }
