@@ -171,8 +171,12 @@ function resolveTicket() {
 
   selectedTicket.status = 'resolved';
 
-  // Calculate realistic response time and satisfaction
-  const timeTaken    = parseFloat((Math.random() * 5 + 1).toFixed(1));
+  // Calculate REAL response time from actual timestamps
+  const createdAt = selectedTicket.created_at ? new Date(selectedTicket.created_at) : new Date();
+  const resolvedAt = new Date();
+  const timeTaken = ((resolvedAt - createdAt) / (1000 * 60 * 60)).toFixed(1); // hours
+
+  // Satisfaction still uses placeholder until linked to real feedback
   const satisfaction = parseFloat((Math.random() * 1 + 4).toFixed(1));
 
   // Update agent profile tracker
@@ -192,6 +196,7 @@ function resolveTicket() {
   document.getElementById('s-resolved').textContent = resolved;
   document.getElementById('nb-open').textContent     = open;
   document.getElementById('nb-resolved').textContent = resolved;
+
   // Send resolution back to backend
   sendResolutionToBackend(selectedTicket);
   closeDetailPanel();
@@ -207,20 +212,10 @@ function resolveTicket() {
 }
 
 // ── ESCALATE TICKET ──
-async function escalateTicket() {
+function escalateTicket() {
   if (!selectedTicket) return;
   selectedTicket.route  = 'dispute';
   selectedTicket.status = 'progress';
-
-  // Send to backend
-  if (selectedTicket._backend_id) {
-    await fetch(BACKEND_URL + '/tickets/' + selectedTicket._backend_id + '/escalate', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'progress', category: 'dispute' })
-    });
-  }
-
   closeDetailPanel();
   renderTickets();
   alert('⚡ Ticket escalated to Dispute Center and assigned to Anjali P Remesh.');

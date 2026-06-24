@@ -107,6 +107,7 @@ function adaptFromBustler(backendTicket) {
       status:        status,
       agent:         agent,
       time:          formatTime(backendTicket.created_at || backendTicket.date),
+      created_at:    backendTicket.created_at || backendTicket.date,
       route:         ROUTE_MAP[category] || 'bug',
       platform:      backendTicket.platform || backendTicket.bustler_seeker || '',
       device:        backendTicket.device   || backendTicket.ios_android    || '',
