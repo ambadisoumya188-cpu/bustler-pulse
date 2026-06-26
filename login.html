@@ -138,33 +138,17 @@
         });
 
         if (response.ok) {
-          const data = await response.json();
-          const token = data.access_token || data.token;
-          sessionStorage.setItem('bp_token', token);
-          sessionStorage.setItem('bp_user', username);
-          window.location.href = 'index.html';
-        } else {
-          // Fallback: mock JWT for testing
-          if (username === 'ops' && password === 'bustler123') {
-            const mockToken = btoa(JSON.stringify({ user: username, role: 'ops', exp: Date.now() + 3600000 }));
-            sessionStorage.setItem('bp_token', mockToken);
-            sessionStorage.setItem('bp_user', username);
-            window.location.href = 'index.html';
-          } else {
-            showError('Invalid credentials. Please try again.');
-          }
-        }
+  const data = await response.json();
+  const token = data.access_token || data.token;
+  sessionStorage.setItem('bp_token', token);
+  sessionStorage.setItem('bp_user', username);
+  window.location.href = 'index.html';
+} else {
+  showError('Invalid credentials. Please try again.');
+}
       } catch (err) {
-        // Backend not reachable — use mock login
-        if (username === 'ops' && password === 'bustler123') {
-          const mockToken = btoa(JSON.stringify({ user: username, role: 'ops', exp: Date.now() + 3600000 }));
-          sessionStorage.setItem('bp_token', mockToken);
-          sessionStorage.setItem('bp_user', username);
-          window.location.href = 'index.html';
-        } else {
-          showError('Invalid credentials. Use ops / bustler123 for demo.');
-        }
-      }
+  showError('Login service unavailable. Please try again later.');
+}
 
       btn.disabled = false;
       btn.textContent = 'Sign In';
