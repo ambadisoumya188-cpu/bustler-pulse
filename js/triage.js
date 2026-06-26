@@ -15,6 +15,12 @@ let triageTotal      = parseInt(localStorage.getItem('triage_total') || '0');
 function renderIncomingQueue() {
   const el = document.getElementById('incoming-queue');
   if (!el) return;
+  incomingQueue.sort((a, b) => {
+    const aAnger = a.anger_detected ? 1 : 0;
+    const bAnger = b.anger_detected ? 1 : 0;
+    if (aAnger !== bAnger) return bAnger - aAnger;
+    return (b.urgency_score || 0) - (a.urgency_score || 0);
+  });
 
   if (incomingQueue.length === 0) {
     el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">✓ All complaints processed</div>';

@@ -41,6 +41,7 @@ async function fetchRealTickets() {
 
       // Add new tickets into AI Triage incoming queue too
       realTickets.forEach(realTicket => {
+        if (realTicket.status === 'resolved') return;
         const alreadyInQueue = incomingQueue.find(q => q.id === ('#' + realTicket._backend_id));
         if (alreadyInQueue) return;
 
