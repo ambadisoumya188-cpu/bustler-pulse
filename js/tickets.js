@@ -263,7 +263,7 @@ async function escalateTicket() {
 
   closeDetailPanel();
   renderTickets();
-  alert('⚡ Ticket escalated to Dispute Center and assigned to Anjali P Remesh.');
+  alert('⚡ Ticket escalated and assigned to Anjali P Remesh.');
 }
 
 // ── RENDER DASHBOARD RECENT TICKETS + BREAKDOWN ──
