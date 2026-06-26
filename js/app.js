@@ -48,7 +48,18 @@ async function fetchRealTickets() {
           id:   '#' + realTicket._backend_id,
           user: realTicket.user || 'Unknown User',
           msg:  realTicket.title || realTicket.description || 'New complaint',
-          time: 'Just now'
+          time: 'Just now',
+          // Real triage fields, already auto-triaged server-side by Adhilekshmi's
+          // backend — triage.js reads these directly instead of calling any AI itself.
+          _backend_id:     realTicket._backend_id,
+          _triaged:        realTicket._triaged,
+          category:        realTicket.category,
+          urgency:          realTicket.urgency,
+          urgency_score:    realTicket.urgency_score,
+          anger_detected:   realTicket.anger_detected,
+          route_to:         realTicket.route_to,
+          auto_reply:       realTicket.auto_reply,
+          auto_reply_sent:  realTicket.auto_reply_sent
         });
       });
       renderIncomingQueue();

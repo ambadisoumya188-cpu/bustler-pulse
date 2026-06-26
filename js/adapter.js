@@ -1,6 +1,7 @@
 // ══════════════════════════════════════
 // BUSTLER PULSE — ADAPTER.JS
 // Updated with Bustler's real spreadsheet format
+// + now also maps real AI-triage fields from Adhilekshmi's backend
 // ══════════════════════════════════════
 
 // ── BUSTLER'S REAL SPREADSHEET FORMAT ──
@@ -29,6 +30,8 @@ const CATEGORY_MAP = {
 };
 
 // ── PRIORITY/URGENCY MAPPING ──
+// Note: Adhilekshmi's real AI triage sends lowercase 'low' / 'medium' / 'critical'.
+// The old spreadsheet priority values (p1-p4 / high) are kept too so nothing breaks.
 const URGENCY_MAP = {
   'p1':       { urgency: 'Critical', score: 3 },
   'p2':       { urgency: 'High',     score: 2 },
@@ -55,7 +58,7 @@ const STATUS_MAP = {
   'done':        'resolved'
 };
 
-// ── ROUTE MAPPING ──
+// ── ROUTE MAPPING (category → internal page filter, unchanged/unused by triage) ──
 const ROUTE_MAP = {
   'Bug Report':       'bug',
   'User Confusion':   'confusion',
@@ -63,6 +66,24 @@ const ROUTE_MAP = {
   'Feature Feedback': 'feedback',
   'General Issue':    'bug'
 };
+
+// ── REAL AI TRIAGE: route_to TEAM LABELS ──
+// Adhilekshmi's backend sends raw team keys like 'refund_team'. This turns
+// them into a readable label for the AI Triage panel. This is separate from
+// the existing intern-assignment (`agent`) logic below — it does not touch it.
+const ROUTE_TO_LABELS = {
+  payment_team: 'Payment Team',
+  refund_team:  'Refund Team',
+  ops_agent:    'Ops Agent',
+  dispute_team: 'Dispute Team'
+};
+function labelRouteTo(rawRoute) {
+  if (!rawRoute) return null;
+  if (ROUTE_TO_LABELS[rawRoute]) return ROUTE_TO_LABELS[rawRoute];
+  // Fallback: turn 'some_new_team' into 'Some New Team' so unknown future
+  // values from the backend still display reasonably instead of breaking.
+  return rawRoute.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
 // ══════════════════════════════════════
 // ADAPT FROM BUSTLER BACKEND FORMAT
@@ -92,7 +113,7 @@ function adaptFromBustler(backendTicket) {
     ).toLowerCase();
     const status = STATUS_MAP[rawStatus] || 'open';
 
-    // Map agent
+    // Map agent (intern assignment — unrelated to AI route_to teams)
     const agent = mapAgentByCategory(category);
 
     // Build our ticket format
@@ -113,7 +134,16 @@ function adaptFromBustler(backendTicket) {
       device:        backendTicket.device   || backendTicket.ios_android    || '',
       anger_detected: backendTicket.is_anger_flagged === 1,
       _backend_id:   backendTicket.id,
-      screenshot_url: backendTicket.screenshot_url || null
+      screenshot_url: backendTicket.screenshot_url || null,
+
+      // ── REAL AI TRIAGE FIELDS (from Adhilekshmi's automatic backend triage) ──
+      route_to:        labelRouteTo(backendTicket.route_to),
+      auto_reply:      backendTicket.auto_reply || null,
+      auto_reply_sent: backendTicket.auto_reply_sent === 1,
+      // True once the backend has actually run AI triage on this ticket.
+      // is_anger_flagged is always present once triage has run, even when 0,
+      // so its presence is a reliable signal that triage has completed.
+      _triaged: backendTicket.is_anger_flagged !== undefined && backendTicket.is_anger_flagged !== null
     };
 
   } catch (e) {
@@ -205,6 +235,9 @@ function testAdapter() {
     urgency:         'p1',
     status:          'open',
     is_anger_flagged: 0,
+    route_to:        'ops_agent',
+    auto_reply:       'Thanks, our team is on it.',
+    auto_reply_sent:  1,
     created_at:      new Date().toISOString()
   };
   console.log('Bustler format:', sampleBustlerTicket);

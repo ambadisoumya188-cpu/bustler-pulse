@@ -1,47 +1,17 @@
 // ══════════════════════════════════════
 // BUSTLER PULSE — TRIAGE.JS
-// AI Triage Engine — with demo mode fallback
+// AI Triage Engine — now reads REAL triage results from Adhilekshmi's backend
+// (the old direct-to-Claude browser call and fake keyword fallback are gone)
 // ══════════════════════════════════════
 
-const API_URL = "https://api.anthropic.com/v1/messages";
+const BACKEND_URL_TRIAGE = 'https://bustler-pulse.onrender.com';
 
 let incomingQueue    = [...INCOMING];
 let triageAutoCount  = parseInt(localStorage.getItem('triage_auto')  || '0');
 let triageAngerCount = parseInt(localStorage.getItem('triage_anger') || '0');
 let triageTotal      = parseInt(localStorage.getItem('triage_total') || '0');
-// ── DEMO MODE RESPONSES ──
-const DEMO_RESPONSES = {
-  'INC-001': {
-    category: 'Bug Report', urgency: 'Critical', urgency_score: 3,
-    anger_detected: true, route_to: 'Team Lead',
-    auto_reply: 'We sincerely apologize for the login issue. This has been flagged as critical and a senior team member will contact you within 30 minutes. Please try using a different browser as a workaround.',
-    summary: 'User cannot login — 404 error since last update',
-    auto_resolvable: false
-  },
-  'INC-002': {
-    category: 'User Confusion', urgency: 'Low', urgency_score: 1,
-    anger_detected: false, route_to: 'Adhilekshmi R',
-    auto_reply: 'Happy to help! To add a new skill, go to your profile, tap Edit Profile, scroll to Skills and tap the + button. Let us know if you need further help!',
-    summary: 'User confused about how to add skills to profile',
-    auto_resolvable: true
-  },
-  'INC-003': {
-    category: 'Dispute', urgency: 'High', urgency_score: 2,
-    anger_detected: false, route_to: 'Anjali P Remesh',
-    auto_reply: 'Your dispute has been logged. Our resolution specialist will review the case and contact both parties within 24 hours with a fair resolution.',
-    summary: 'Freelancer not responding — refund request of Rs.12000',
-    auto_resolvable: false
-  },
-  'INC-004': {
-    category: 'Bug Report', urgency: 'Critical', urgency_score: 3,
-    anger_detected: true, route_to: 'Team Lead',
-    auto_reply: 'We are very sorry about the app crash. This is a critical issue and our technical team is working on a fix right now. We will update you within 2 hours.',
-    summary: 'App crashes when opening messages section — critical bug',
-    auto_resolvable: false
-  }
-};
 
-// ── RENDER INCOMING QUEUE ──
+// ── RENDER INCOMING QUEUE ── (unchanged — same look, same behavior)
 function renderIncomingQueue() {
   const el = document.getElementById('incoming-queue');
   if (!el) return;
@@ -73,7 +43,7 @@ function renderIncomingQueue() {
   if (queueStatEl) queueStatEl.textContent = incomingQueue.length;
 }
 
-// ── PROCESS NEXT ──
+// ── PROCESS NEXT ── (same UI flow/animation as before)
 async function processNext() {
   if (incomingQueue.length === 0) return;
   const ticket = incomingQueue[0];
@@ -83,13 +53,12 @@ async function processNext() {
   const thinking = document.getElementById('triage-thinking');
   if (thinking) thinking.classList.add('show');
 
-  let result = null;
+  let result;
   try {
-    result = await callRealAI(ticket);
+    result = await getTriageResult(ticket);
   } catch (e) {
-    console.log('Real AI unavailable — using demo mode');
-    result = getDemoResponse(ticket);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    console.log('Could not load real triage result:', e.message);
+    result = unavailableResult();
   }
 
   incomingQueue.shift();
@@ -109,43 +78,67 @@ async function processNext() {
   }
 }
 
-// ── CALL REAL AI ──
-async function callRealAI(ticket) {
-  const prompt = `You are the AI triage engine for Bustler Pulse. Analyze this complaint and respond ONLY in valid JSON:
-{"category":"Bug Report"|"User Confusion"|"Feature Feedback"|"Dispute"|"General Issue","urgency":"Critical"|"High"|"Medium"|"Low","urgency_score":1|2|3,"anger_detected":true|false,"route_to":"Ambadi Sajan"|"Adhilekshmi R"|"Anjali P Remesh"|"Team Lead","auto_reply":"2-3 sentence reply","summary":"one sentence summary","auto_resolvable":true|false}
-Routing: Bug→Ambadi, Confusion→Adhilekshmi, Dispute→Anjali, Feedback→Adhilekshmi, Critical/Angry→Team Lead.
-User: ${ticket.user}. Message: "${ticket.msg}"`;
+// ── GET TRIAGE RESULT ──
+// Tickets normally arrive already triaged — Adhilekshmi's backend runs real
+// AI triage automatically the instant a ticket is created. In that case we
+// just read the data that's already on the ticket, no network call needed.
+// If a ticket somehow has no triage data yet (e.g. it arrived the same
+// instant it was created), we call the manual /tickets/{id}/triage endpoint
+// to fetch a real result instead of guessing.
+async function getTriageResult(ticket) {
+  if (ticket._triaged) {
+    return {
+      category:        ticket.category || 'General Issue',
+      urgency:          ticket.urgency || 'Medium',
+      urgency_score:    ticket.urgency_score || 2,
+      anger_detected:   !!ticket.anger_detected,
+      route_to:         ticket.route_to || 'Unassigned',
+      auto_reply:       ticket.auto_reply || 'No automatic reply was generated for this ticket.',
+      summary:          ticket.msg ? ticket.msg.substring(0, 80) : 'Ticket triaged',
+      auto_resolvable:  !!ticket.auto_reply_sent,
+      _isRealAI:        true
+    };
+  }
 
-  const res  = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+  if (!ticket._backend_id) {
+    throw new Error('No backend ticket id — cannot run real triage on this ticket');
+  }
+
+  const res = await fetch(BACKEND_URL_TRIAGE + '/tickets/' + ticket._backend_id + '/triage', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' }
   });
-  const data   = await res.json();
-  const raw    = data.content[0].text.replace(/```json|```/g, '').trim();
-  const result = JSON.parse(raw);
-  result._isRealAI = true;
-  return result;
+  if (!res.ok) throw new Error('Triage request failed: ' + res.status);
+
+  const data = await res.json();
+  const urgencyInfo = URGENCY_MAP[(data.urgency || 'medium').toLowerCase()] || URGENCY_MAP['medium'];
+
+  return {
+    category:        ticket.category || 'General Issue',
+    urgency:          urgencyInfo.urgency,
+    urgency_score:    urgencyInfo.score,
+    anger_detected:   data.is_anger_flagged === 1,
+    route_to:         labelRouteTo(data.route_to) || 'Unassigned',
+    auto_reply:       data.auto_reply || 'No automatic reply was generated for this ticket.',
+    summary:          ticket.msg ? ticket.msg.substring(0, 80) : 'Ticket triaged',
+    auto_resolvable:  data.auto_reply_sent === 1,
+    _isRealAI:        true
+  };
 }
 
-// ── GET DEMO RESPONSE ──
-function getDemoResponse(ticket) {
-  if (DEMO_RESPONSES[ticket.id]) return { ...DEMO_RESPONSES[ticket.id], _isRealAI: false };
-
-  const msg        = ticket.msg.toLowerCase();
-  const isAngry    = msg.includes('frustrated') || msg.includes('unacceptable') || msg.includes('terrible');
-  const isBug      = msg.includes('error') || msg.includes('crash') || msg.includes('not working');
-  const isDispute  = msg.includes('refund') || msg.includes('payment') || msg.includes('not responding');
-  const isConfused = msg.includes('how') || msg.includes('cannot find') || msg.includes('where');
-
-  if (isDispute)        return { category:'Dispute',          urgency:'High',     urgency_score:2, anger_detected:false,   route_to:'Anjali P Remesh', auto_reply:'Your dispute has been logged. Our specialist will contact both parties within 24 hours.', summary:'Dispute filed — routed to resolution center', auto_resolvable:false, _isRealAI:false };
-  if (isAngry && isBug) return { category:'Bug Report',       urgency:'Critical', urgency_score:3, anger_detected:true,    route_to:'Team Lead',       auto_reply:'We sincerely apologize. Your complaint has been escalated and someone will contact you within 30 minutes.', summary:'Critical bug — angry user escalated', auto_resolvable:false, _isRealAI:false };
-  if (isBug)            return { category:'Bug Report',       urgency:'High',     urgency_score:2, anger_detected:false,   route_to:'Ambadi Sajan',    auto_reply:'Thank you for reporting this. Our technical team has been notified and will update you within 2 hours.', summary:'Bug reported — assigned to technical agent', auto_resolvable:false, _isRealAI:false };
-  if (isConfused)       return { category:'User Confusion',   urgency:'Low',      urgency_score:1, anger_detected:false,   route_to:'Adhilekshmi R',   auto_reply:'Happy to help! Our support team will guide you through this shortly.', summary:'User needs guidance — routed to support agent', auto_resolvable:true, _isRealAI:false };
-  return               { category:'General Issue',           urgency:'Medium',   urgency_score:2, anger_detected:isAngry, route_to:'Ambadi Sajan',    auto_reply:'Thank you for contacting Bustler. A team member will respond within 3 hours.', summary:'General issue received — under review', auto_resolvable:false, _isRealAI:false };
+// ── ONLY shown if the real triage service can't be reached at all ──
+// (e.g. network/backend down) — clearly marked as unavailable rather than
+// quietly faking a result.
+function unavailableResult() {
+  return {
+    category: 'General Issue', urgency: 'Medium', urgency_score: 2,
+    anger_detected: false, route_to: 'Unassigned',
+    auto_reply: 'Triage service could not be reached — please review this ticket manually.',
+    summary: 'Triage unavailable', auto_resolvable: false, _isRealAI: false
+  };
 }
 
-// ── SHOW RESULT ──
+// ── SHOW RESULT ── (unchanged — same panel, same styling)
 function showLatestResult(ticket, r) {
   const el = document.getElementById('latest-result');
   if (!el) return;
@@ -163,7 +156,7 @@ function showLatestResult(ticket, r) {
           <span style="font-size:10px;color:var(--text3);font-family:monospace">${ticket.id}</span>
           ${r._isRealAI
             ? '<span style="font-size:10px;padding:2px 7px;background:var(--gdim);color:var(--green);border:1px solid var(--gborder);border-radius:10px">Real AI</span>'
-            : '<span style="font-size:10px;padding:2px 7px;background:var(--bdim);color:var(--blue);border:1px solid rgba(78,158,255,.25);border-radius:10px">Demo Mode</span>'
+            : '<span style="font-size:10px;padding:2px 7px;background:var(--rdim);color:var(--red);border:1px solid rgba(240,82,82,.25);border-radius:10px">Unavailable</span>'
           }
         </div>
       </div>
@@ -185,10 +178,24 @@ function showLatestResult(ticket, r) {
 }
 
 // ── ADD TO TICKET LIST ──
+// Now UPDATES the existing real ticket instead of creating a duplicate fake
+// one. Only creates a new entry for legacy demo tickets that have no
+// _backend_id (i.e. the original dummy/sample data, not real backend tickets).
 function addProcessedTicket(ticket, result) {
-  const routeMap = { 'Ambadi Sajan':'bug', 'Adhilekshmi R':'confusion', 'Anjali P Remesh':'dispute', 'Team Lead':'bug' };
-  const newId = 'TKT-' + String(TICKETS.length + 1).padStart(3, '0');
-  TICKETS.unshift({ id:newId, user:ticket.user, title:result.summary||ticket.msg.substring(0,50), message:ticket.msg, category:result.category, urgency:result.urgency, urgency_score:result.urgency_score, status:'open', agent:result.route_to, time:'Just now', route:routeMap[result.route_to]||'bug' });
+  const backendId = ticket._backend_id || (ticket.id ? String(ticket.id).replace('#', '') : null);
+  const existing = backendId ? TICKETS.find(t => String(t._backend_id) === String(backendId)) : null;
+
+  if (existing) {
+    existing.category       = result.category;
+    existing.urgency        = result.urgency;
+    existing.urgency_score  = result.urgency_score;
+    existing.anger_detected = result.anger_detected;
+    existing.route_to       = result.route_to; // display-only, does not change intern `agent` assignment
+  } else {
+    const newId = 'TKT-' + String(TICKETS.length + 1).padStart(3, '0');
+    TICKETS.unshift({ id:newId, user:ticket.user, title:result.summary||ticket.msg.substring(0,50), message:ticket.msg, category:result.category, urgency:result.urgency, urgency_score:result.urgency_score, status:'open', agent:'Ambadi Sajan', time:'Just now', route:'bug' });
+  }
+
   const openCount = TICKETS.filter(t => t.status==='open'||t.status==='progress').length;
   const nbOpen = document.getElementById('nb-open');
   const sOpen  = document.getElementById('s-open');
@@ -198,7 +205,7 @@ function addProcessedTicket(ticket, result) {
   renderDashboard();
 }
 
-// ── UPDATE STATS ──
+// ── UPDATE STATS ── (unchanged)
 function updateTriageStats() {
   const autoEl  = document.getElementById('t-auto');
   const angerEl = document.getElementById('t-anger');
