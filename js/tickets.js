@@ -152,7 +152,9 @@ function openDetail(id) {
   `;
   const escalateBtn = document.getElementById('btn-escalate');
 if (escalateBtn) {
-  escalateBtn.style.display = (t.status === 'resolved') ? 'none' : 'block';
+  const alreadyEscalated = t.category === 'Dispute';
+  const isResolved = t.status === 'resolved';
+  escalateBtn.style.display = (isResolved || alreadyEscalated) ? 'none' : 'block';
 }
 
   document.getElementById('detail-overlay').classList.add('show');
