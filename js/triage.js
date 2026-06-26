@@ -216,17 +216,3 @@ function updateTriageStats() {
   localStorage.setItem('triage_anger', triageAngerCount);
   localStorage.setItem('triage_total', triageTotal);
 }
-// ── FULL AUTOMATION ──
-// No clicking needed — automatically shows the next ticket's AI result
-// every few seconds, like a slideshow, for as long as tickets are waiting.
-let _autoProcessing = false;
-function startAutoTriageDisplay() {
-  setInterval(async () => {
-    if (_autoProcessing) return;
-    if (incomingQueue.length === 0) return;
-    _autoProcessing = true;
-    await processNext();
-    _autoProcessing = false;
-  }, 4000); // every 4 seconds
-}
-window.addEventListener('DOMContentLoaded', startAutoTriageDisplay);
