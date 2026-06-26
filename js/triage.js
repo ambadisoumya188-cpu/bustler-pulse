@@ -156,3 +156,63 @@ function showLatestResult(ticket, r) {
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-size:10px;color:var(--text3);font-family:monospace">${ticket.id}</span>
           ${r._isRealAI
+            ? '<span style="font-size:10px;padding:2px 7px;background:var(--gdim);color:var(--green);border:1px solid var(--gborder);border-radius:10px">Real AI</span>'
+            : '<span style="font-size:10px;padding:2px 7px;background:var(--rdim);color:var(--red);border:1px solid rgba(240,82,82,.25);border-radius:10px">Unavailable</span>'
+          }
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.55;background:var(--bg3);padding:10px 12px;border-radius:8px;margin-bottom:12px">${ticket.msg}</div>
+      ${r.anger_detected ? '<div style="background:var(--rdim);border:1px solid rgba(240,82,82,.25);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);margin-bottom:12px">⚠️ Anger detected — priority handling required</div>' : ''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="tag ${tagMap[r.category]||'tag-confusion'}">${r.category}</span>
+        <span class="urgency-badge ${urgMap[r.urgency]||'ub-low'}">${r.urgency}</span>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:5px;display:flex;justify-content:space-between"><span>Urgency</span><span>${r.urgency_score}/3</span></div>
+        <div class="track"><div class="track-fill" style="width:${widthMap[r.urgency_score]};background:${colorMap[r.urgency_score]}"></div></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Routed to</div>
+      <div style="font-size:13px;font-weight:500;color:var(--green);margin-bottom:12px">→ ${r.route_to}</div>
+      <div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Auto-reply sent to user</div>
+      <div style="background:var(--bg3);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.6">${r.auto_reply}</div>
+    </div>`;
+}
+
+// ── ADD TO TICKET LIST ──
+function addProcessedTicket(ticket, result) {
+  const backendId = ticket._backend_id || (ticket.id ? String(ticket.id).replace('#', '') : null);
+  const existing = backendId ? TICKETS.find(t => String(t._backend_id) === String(backendId)) : null;
+
+  if (existing) {
+    existing.category       = result.category;
+    existing.urgency        = result.urgency;
+    existing.urgency_score  = result.urgency_score;
+    existing.anger_detected = result.anger_detected;
+    existing.route_to       = result.route_to;
+  } else {
+    const newId = 'TKT-' + String(TICKETS.length + 1).padStart(3, '0');
+    TICKETS.unshift({ id:newId, user:ticket.user, title:result.summary||ticket.msg.substring(0,50), message:ticket.msg, category:result.category, urgency:result.urgency, urgency_score:result.urgency_score, status:'open', agent:'Ambadi Sajan', time:'Just now', route:'bug' });
+  }
+
+  const openCount = TICKETS.filter(t => t.status==='open'||t.status==='progress').length;
+  const nbOpen = document.getElementById('nb-open');
+  const sOpen  = document.getElementById('s-open');
+  if (nbOpen) nbOpen.textContent = openCount;
+  if (sOpen)  sOpen.textContent  = openCount;
+  renderTickets();
+  renderDashboard();
+}
+
+// ── UPDATE STATS ──
+function updateTriageStats() {
+  const autoEl  = document.getElementById('t-auto');
+  const angerEl = document.getElementById('t-anger');
+  const totalEl = document.getElementById('t-queue-count');
+  if (autoEl)  autoEl.textContent  = triageAutoCount;
+  if (angerEl) angerEl.textContent = triageAngerCount;
+  if (totalEl) totalEl.textContent = incomingQueue.length;
+
+  localStorage.setItem('triage_auto',  triageAutoCount);
+  localStorage.setItem('triage_anger', triageAngerCount);
+  localStorage.setItem('triage_total', triageTotal);
+}
