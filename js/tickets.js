@@ -222,12 +222,8 @@ const timeTaken = ((resolvedAt - createdAt) / (1000 * 60 * 60)).toFixed(1); // h
 // ── ESCALATE TICKET ──
 async function escalateTicket() {
   if (!selectedTicket) return;
-  console.log('Escalating ticket, backend ID:', selectedTicket._backend_id); 
+  console.log('Escalating ticket, backend ID:', selectedTicket._backend_id);
 
-  selectedTicket.route  = 'dispute';
-  selectedTicket.status = 'progress';
-
-  // Send to backend
   if (selectedTicket._backend_id) {
     try {
       const res = await fetch(BACKEND_URL + '/tickets/' + selectedTicket._backend_id + '/escalate', {
@@ -242,6 +238,13 @@ async function escalateTicket() {
       if (res.ok) {
         const data = await res.json();
         console.log('Ticket escalated successfully on backend:', data.message);
+
+        // ✅ Update LOCAL ticket immediately so the UI reflects it without a refresh
+        selectedTicket.category = 'Dispute';
+        selectedTicket.route     = 'dispute';
+        selectedTicket.status    = 'progress';
+        selectedTicket.agent     = 'Anjali P Remesh';
+
       } else if (res.status === 400) {
         alert('⚠️ This ticket is already resolved and cannot be escalated.');
         return;
@@ -253,18 +256,14 @@ async function escalateTicket() {
       }
     } catch (e) {
       console.log('Could not escalate on backend:', e.message);
-         }
+    }
   } else {
-    console.log('No backend ID found on this ticket!');  // ✅ ADD THIS - important check
+    console.log('No backend ID found on this ticket!');
   }
 
   closeDetailPanel();
   renderTickets();
   alert('⚡ Ticket escalated to Dispute Center and assigned to Anjali P Remesh.');
-    
-  
-
-
 }
 
 // ── RENDER DASHBOARD RECENT TICKETS + BREAKDOWN ──
