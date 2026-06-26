@@ -144,34 +144,10 @@ const TICKETS = [
 ];
 
 // ── INCOMING QUEUE ──
-// Simulates complaints coming from Anjali's user form
-// In production these come automatically from the backend
-const INCOMING = [
-  {
-    id:   'INC-001',
-    user: 'Vivek',
-    time: '2m ago',
-    msg:  'Payment confirmed by email but app is still asking me to pay again. I have already paid the advance amount!'
-  },
-  {
-    id:   'INC-002',
-    user: 'Navaneeth',
-    time: '5m ago',
-    msg:  'My Bustles page is popping out order details every time I refresh. Very annoying bug.'
-  },
-  {
-    id:   'INC-003',
-    user: 'Kannanunni',
-    time: '11m ago',
-    msg:  'The app crashes every time I tap the + menu. Cannot create any new bustle at all.'
-  },
-  {
-    id:   'INC-004',
-    user: 'Vivek',
-    time: '18m ago',
-    msg:  'Message notifications are completely broken. I am missing all my client messages!'
-  }
-];
+// We're in production now — the queue starts empty and fills only with real
+// tickets pulled live from the backend (see fetchRealTickets() in app.js).
+// (Old demo entries INC-001 to INC-004 removed — they were never real tickets.)
+const INCOMING = [];
 
 // ── AGENT DATA ──
 const AGENTS = {
