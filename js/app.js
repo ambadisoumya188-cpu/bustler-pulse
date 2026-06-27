@@ -17,6 +17,38 @@ function updateSidebarBadges() {
   if (nbTriage)  nbTriage.textContent  = incomingQueue.length;
   if (nbUrgent)  nbUrgent.textContent  = TICKETS.filter(t => t.urgency_score === 3 && t.status !== 'resolved').length;
   if (nbDispute) nbDispute.textContent = TICKETS.filter(t => t.category === 'Dispute' && t.status !== 'resolved').length;
+}// ── FEEDBACK BADGE ──
+// Shows how many feedback entries haven't been looked at yet. Clears itself
+// the moment the Feedback page is opened.
+function setFeedbackBadge(count) {
+  const badge = document.getElementById('nb-feedback');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function checkFeedbackBadge() {
+  fetch('https://bustler-pulse.onrender.com/feedback/')
+    .then(r => r.json())
+    .then(data => {
+      const seen = JSON.parse(localStorage.getItem('seenFeedbackIds') || '[]');
+      const feedbackPage = document.getElementById('page-feedback');
+      const isOpen = feedbackPage && feedbackPage.classList.contains('active');
+
+      if (isOpen) {
+        const allIds = data.map(f => f.ticket_id || f.id);
+        localStorage.setItem('seenFeedbackIds', JSON.stringify(allIds));
+        setFeedbackBadge(0);
+      } else {
+        const newCount = data.filter(f => !seen.includes(f.ticket_id || f.id)).length;
+        setFeedbackBadge(newCount);
+      }
+    })
+    .catch(() => {});
 }
 
 // ── CLOCK ──
@@ -89,6 +121,7 @@ async function fetchRealTickets() {
       // Re-render
       renderTickets();
       renderDashboard();
+      updateSidebarBadges();
 
       console.log('Real tickets loaded from backend:', realTickets.length);
       showConnectionStatus(true, realTickets.length);
@@ -252,6 +285,7 @@ function showPage(name, btn) {
 
   if (name === 'feedback') {
     renderFeedback();
+    checkFeedbackBadge();
   }
 
   if (name === 'health') {
@@ -307,6 +341,7 @@ function startAutoRefresh() {
     if (feedbackPage && feedbackPage.classList.contains('active')) {
       renderFeedback();
     }
+    checkFeedbackBadge();
   }, 30000);
 }
 
@@ -323,6 +358,7 @@ function initApp() {
   renderAgentCards();
   renderTickets();
   renderDashboard();
+  renderIncomingQueue();
   updateSidebarBadges();
   renderIncomingQueue();
 
