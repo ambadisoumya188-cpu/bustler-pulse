@@ -31,7 +31,7 @@ function renderIncomingQueue() {
   }
 
   el.innerHTML = incomingQueue.map((item, idx) => `
-    <div class="queue-item ${idx === 0 ? 'next' : ''}" style="cursor:pointer" onclick="processQueueItem('${item.id}')">
+    <div class="queue-item ${idx === 0 ? 'next' : ''}" style="cursor:pointer" onclick="processQueueItem('${item.id}', this)">
       <div class="qi-dot" style="background:${idx === 0 ? 'var(--green)' : 'var(--text3)'}"></div>
       <div class="qi-body">
         <div class="qi-user">${item.user}
@@ -62,9 +62,18 @@ async function processNext() {
 }
 
 // Process whichever ticket was clicked in the queue, wherever it sits in line
-function processQueueItem(ticketId) {
+function processQueueItem(ticketId, el) {
   const ticket = incomingQueue.find(q => q.id === ticketId);
   if (!ticket) return;
+
+  // Instantly highlight the clicked item so it's clear which one is being
+  // processed, before it gets removed from the list a moment later.
+  if (el) {
+    el.classList.add('next');
+    el.style.pointerEvents = 'none';
+    el.style.opacity = '0.7';
+  }
+
   processTicket(ticket);
 }
 
