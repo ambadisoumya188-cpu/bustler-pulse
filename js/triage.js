@@ -1,7 +1,6 @@
 // ══════════════════════════════════════
 // BUSTLER PULSE — TRIAGE.JS
-// AI Triage Engine — now reads REAL triage results from Adhilekshmi's backend
-// (the old direct-to-Claude browser call and fake keyword fallback are gone)
+// AI Triage Engine — reads REAL triage results from Adhilekshmi's backend
 // ══════════════════════════════════════
 
 const BACKEND_URL_TRIAGE = 'https://bustler-pulse.onrender.com';
@@ -10,11 +9,13 @@ let incomingQueue    = [...INCOMING];
 let triageAutoCount  = parseInt(localStorage.getItem('triage_auto')  || '0');
 let triageAngerCount = parseInt(localStorage.getItem('triage_anger') || '0');
 let triageTotal      = parseInt(localStorage.getItem('triage_total') || '0');
+let latestProcessedTicket = null;
+let latestProcessedResult = null;
 
-// ── RENDER INCOMING QUEUE ──
 function renderIncomingQueue() {
   const el = document.getElementById('incoming-queue');
   if (!el) return;
+
   incomingQueue.sort((a, b) => {
     const aAnger = a.anger_detected ? 1 : 0;
     const bAnger = b.anger_detected ? 1 : 0;
@@ -48,9 +49,6 @@ function renderIncomingQueue() {
   const queueStatEl = document.getElementById('t-queue-count');
   if (queueStatEl) queueStatEl.textContent = incomingQueue.length;
 
-  // If the queue started empty and real tickets arrived after, the button
-  // can get stuck disabled on "All Processed" — re-enable it now that there's
-  // work to do (but don't interrupt it mid-click while it says "Processing...").
   const btn = document.getElementById('process-all-btn');
   if (btn && btn.disabled && btn.textContent.trim() === 'All Processed') {
     btn.disabled = false;
@@ -58,7 +56,6 @@ function renderIncomingQueue() {
   }
 }
 
-// ── PROCESS NEXT ──
 async function processNext() {
   if (incomingQueue.length === 0) return;
   const ticket = incomingQueue[0];
@@ -78,6 +75,8 @@ async function processNext() {
 
   incomingQueue.shift();
   renderIncomingQueue();
+  latestProcessedTicket = ticket;
+  latestProcessedResult = result;
   showLatestResult(ticket, result);
   addProcessedTicket(ticket, result);
 
@@ -93,7 +92,6 @@ async function processNext() {
   }
 }
 
-// ── GET TRIAGE RESULT ──
 async function getTriageResult(ticket) {
   if (ticket._triaged) {
     return {
@@ -135,7 +133,6 @@ async function getTriageResult(ticket) {
   };
 }
 
-// ── ONLY shown if the real triage service can't be reached at all ──
 function unavailableResult() {
   return {
     category: 'General Issue', urgency: 'Medium', urgency_score: 2,
@@ -145,7 +142,6 @@ function unavailableResult() {
   };
 }
 
-// ── SHOW RESULT ──
 function showLatestResult(ticket, r) {
   const el = document.getElementById('latest-result');
   if (!el) return;
@@ -154,6 +150,11 @@ function showLatestResult(ticket, r) {
   const urgMap   = { 'Critical':'ub-critical', 'High':'ub-high', 'Medium':'ub-high', 'Low':'ub-low' };
   const widthMap = { 1:'33%', 2:'66%', 3:'100%' };
   const colorMap = { 1:'var(--green)', 2:'var(--amber)', 3:'var(--red)' };
+
+  const backendId = ticket._backend_id;
+  const matchedTicket = backendId ? TICKETS.find(t => String(t._backend_id) === String(backendId)) : null;
+  const alreadyResolved  = matchedTicket && matchedTicket.status === 'resolved';
+  const alreadyEscalated = matchedTicket && matchedTicket.category === 'Dispute';
 
   el.innerHTML = `
     <div style="animation:fadeUp .3s ease">
@@ -180,11 +181,37 @@ function showLatestResult(ticket, r) {
       <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Routed to</div>
       <div style="font-size:13px;font-weight:500;color:var(--green);margin-bottom:12px">→ ${r.route_to}</div>
       <div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Auto-reply sent to user</div>
-      <div style="background:var(--bg3);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.6">${r.auto_reply}</div>
+      <div style="background:var(--bg3);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:14px">${r.auto_reply}</div>
+      ${matchedTicket ? `
+      <div style="display:flex;gap:8px">
+        <button onclick="triagePanelResolve('${backendId}')" ${alreadyResolved ? 'disabled' : ''}
+          style="flex:1;padding:9px 0;border-radius:8px;border:1px solid var(--gborder);background:${alreadyResolved ? 'var(--bg3)' : 'var(--gdim)'};color:var(--green);font-size:12px;font-weight:500;cursor:${alreadyResolved ? 'default' : 'pointer'};opacity:${alreadyResolved ? '.5' : '1'}">
+          ${alreadyResolved ? '✓ Resolved' : 'Resolve'}
+        </button>
+        <button onclick="triagePanelEscalate('${backendId}')" ${(alreadyResolved || alreadyEscalated) ? 'disabled' : ''}
+          style="flex:1;padding:9px 0;border-radius:8px;border:1px solid rgba(240,82,82,.25);background:${(alreadyResolved||alreadyEscalated) ? 'var(--bg3)' : 'var(--rdim)'};color:var(--red);font-size:12px;font-weight:500;cursor:${(alreadyResolved||alreadyEscalated) ? 'default' : 'pointer'};opacity:${(alreadyResolved||alreadyEscalated) ? '.5' : '1'}">
+          ${alreadyEscalated ? '✓ Escalated' : 'Escalate'}
+        </button>
+      </div>` : ''}
     </div>`;
 }
 
-// ── ADD TO TICKET LIST ──
+function triagePanelResolve(backendId) {
+  const t = TICKETS.find(t => String(t._backend_id) === String(backendId));
+  if (!t) return;
+  selectedTicket = t;
+  resolveTicket();
+  if (latestProcessedTicket) showLatestResult(latestProcessedTicket, latestProcessedResult);
+}
+
+async function triagePanelEscalate(backendId) {
+  const t = TICKETS.find(t => String(t._backend_id) === String(backendId));
+  if (!t) return;
+  selectedTicket = t;
+  await escalateTicket();
+  if (latestProcessedTicket) showLatestResult(latestProcessedTicket, latestProcessedResult);
+}
+
 function addProcessedTicket(ticket, result) {
   const backendId = ticket._backend_id || (ticket.id ? String(ticket.id).replace('#', '') : null);
   const existing = backendId ? TICKETS.find(t => String(t._backend_id) === String(backendId)) : null;
@@ -209,7 +236,6 @@ function addProcessedTicket(ticket, result) {
   renderDashboard();
 }
 
-// ── UPDATE STATS ──
 function updateTriageStats() {
   const autoEl  = document.getElementById('t-auto');
   const angerEl = document.getElementById('t-anger');

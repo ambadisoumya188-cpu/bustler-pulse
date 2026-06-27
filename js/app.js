@@ -39,9 +39,10 @@ async function fetchRealTickets() {
       });
       checkForCriticalTickets(data);   // use raw backend data, before adapter changes field names
 
-      // Add new tickets into AI Triage incoming queue too
       realTickets.forEach(realTicket => {
         if (realTicket.status === 'resolved') return;
+        if (realTicket.urgency !== 'Critical' && !realTicket.anger_detected) return;
+
         const alreadyInQueue = incomingQueue.find(q => q.id === ('#' + realTicket._backend_id));
         if (alreadyInQueue) return;
 
