@@ -399,19 +399,19 @@ function renderFeedback() {
       }
 
       list.innerHTML = data.map(f =>
-        '<div style="background:#16181c;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px;margin-bottom:12px;display:flex;gap:16px;">' +
-          '<div style="width:38px;height:38px;border-radius:50%;background:#1e2127;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;">' +
+        '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:12px;display:flex;gap:16px;">' +
+          '<div style="width:38px;height:38px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;color:var(--text);">' +
             (f.user||'?').charAt(0).toUpperCase() +
           '</div>' +
           '<div style="flex:1;">' +
             '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
-              '<span style="font-weight:500;font-size:14px;">' + (f.user||'Anonymous') + '</span>' +
-              '<span style="color:#5c5f6a;font-size:12px;">' + new Date(f.created_at).toLocaleDateString() + '</span>' +
+              '<span style="font-weight:500;font-size:14px;color:var(--text);">' + (f.user||'Anonymous') + '</span>' +
+              '<span style="color:var(--text3);font-size:12px;">' + new Date(f.created_at).toLocaleDateString() + '</span>' +
             '</div>' +
             '<div style="font-size:14px;margin-bottom:6px;">' + '⭐'.repeat(f.csat_score||0) + '</div>' +
-            '<div style="color:#9a9da6;font-size:13px;">' + (f.comment||'') + '</div>' +
-            (f.tag ? '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(34,201,132,0.1);color:#22c984;margin-top:6px;display:inline-block;">' + f.tag + '</span>' : '') +
-            '<div style="color:#5c5f6a;font-size:11px;margin-top:6px;">Ticket #' + f.ticket_id + '</div>' +
+            '<div style="color:var(--text2);font-size:13px;">' + (f.comment||'') + '</div>' +
+            (f.tag ? '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--gdim);color:var(--green);margin-top:6px;display:inline-block;">' + f.tag + '</span>' : '') +
+            '<div style="color:var(--text3);font-size:11px;margin-top:6px;">Ticket #' + f.ticket_id + '</div>' +
           '</div>' +
         '</div>'
       ).join('');
