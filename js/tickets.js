@@ -210,6 +210,7 @@ const timeTaken = ((resolvedAt - createdAt) / (1000 * 60 * 60)).toFixed(1); // h
   closeDetailPanel();
   renderTickets();
   renderDashboard();
+  updateSidebarBadges();
 
   alert(
     '✓ Ticket ' + selectedTicket.id + ' resolved!\n' +
@@ -263,6 +264,7 @@ async function escalateTicket() {
 
   closeDetailPanel();
   renderTickets();
+  updateSidebarBadges();
   alert('⚡ Ticket escalated and assigned to Anjali P Remesh.');
 }
 

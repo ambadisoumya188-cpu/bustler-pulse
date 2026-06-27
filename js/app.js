@@ -5,6 +5,19 @@
 
 const BACKEND_URL = 'https://bustler-pulse.onrender.com';
 let notifiedTicketIds = new Set();
+// ── KEEP SIDEBAR BADGES REAL ──
+// AI Triage, Urgent Queue, and Disputes badges used to be frozen at whatever
+// the original demo data said. This recalculates them from the real ticket
+// list every time something changes.
+function updateSidebarBadges() {
+  const nbTriage  = document.getElementById('nb-triage');
+  const nbUrgent  = document.getElementById('nb-urgent');
+  const nbDispute = document.getElementById('nb-dispute');
+
+  if (nbTriage)  nbTriage.textContent  = incomingQueue.length;
+  if (nbUrgent)  nbUrgent.textContent  = TICKETS.filter(t => t.urgency_score === 3 && t.status !== 'resolved').length;
+  if (nbDispute) nbDispute.textContent = TICKETS.filter(t => t.category === 'Dispute' && t.status !== 'resolved').length;
+}
 
 // ── CLOCK ──
 function updateClock() {
@@ -310,6 +323,7 @@ function initApp() {
   renderAgentCards();
   renderTickets();
   renderDashboard();
+  updateSidebarBadges();
   renderIncomingQueue();
 
   // Then fetch real tickets from backend

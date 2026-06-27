@@ -252,6 +252,7 @@ function addProcessedTicket(ticket, result) {
   if (sOpen)  sOpen.textContent  = openCount;
   renderTickets();
   renderDashboard();
+  updateSidebarBadges();
 }
 
 function updateTriageStats() {
