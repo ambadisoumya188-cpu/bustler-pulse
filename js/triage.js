@@ -61,13 +61,10 @@ async function processNext() {
   await processTicket(incomingQueue[0]);
 }
 
-// Process whichever ticket was clicked in the queue, wherever it sits in line
 function processQueueItem(ticketId, el) {
   const ticket = incomingQueue.find(q => q.id === ticketId);
   if (!ticket) return;
 
-  // Instantly highlight the clicked item so it's clear which one is being
-  // processed, before it gets removed from the list a moment later.
   if (el) {
     el.classList.add('next');
     el.style.pointerEvents = 'none';
@@ -85,7 +82,9 @@ async function processTicket(ticket) {
 
   let result;
   try {
-    result = await getTriageResult(ticket);
+    const minDelay = new Promise(resolve => setTimeout(resolve, 350));
+    const [triageData] = await Promise.all([getTriageResult(ticket), minDelay]);
+    result = triageData;
   } catch (e) {
     console.log('Could not load real triage result:', e.message);
     result = unavailableResult();
