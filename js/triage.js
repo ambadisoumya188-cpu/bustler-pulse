@@ -31,7 +31,7 @@ function renderIncomingQueue() {
   }
 
   el.innerHTML = incomingQueue.map((item, idx) => `
-    <div class="queue-item ${idx === 0 ? 'next' : ''}">
+    <div class="queue-item ${idx === 0 ? 'next' : ''}" style="cursor:pointer" onclick="processQueueItem('${item.id}')">
       <div class="qi-dot" style="background:${idx === 0 ? 'var(--green)' : 'var(--text3)'}"></div>
       <div class="qi-body">
         <div class="qi-user">${item.user}
@@ -58,8 +58,17 @@ function renderIncomingQueue() {
 
 async function processNext() {
   if (incomingQueue.length === 0) return;
-  const ticket = incomingQueue[0];
+  await processTicket(incomingQueue[0]);
+}
 
+// Process whichever ticket was clicked in the queue, wherever it sits in line
+function processQueueItem(ticketId) {
+  const ticket = incomingQueue.find(q => q.id === ticketId);
+  if (!ticket) return;
+  processTicket(ticket);
+}
+
+async function processTicket(ticket) {
   const btn = document.getElementById('process-all-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
   const thinking = document.getElementById('triage-thinking');
@@ -73,7 +82,8 @@ async function processNext() {
     result = unavailableResult();
   }
 
-  incomingQueue.shift();
+  const idx = incomingQueue.findIndex(q => q.id === ticket.id);
+  if (idx !== -1) incomingQueue.splice(idx, 1);
   renderIncomingQueue();
   latestProcessedTicket = ticket;
   latestProcessedResult = result;
