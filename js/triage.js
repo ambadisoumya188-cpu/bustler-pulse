@@ -11,6 +11,7 @@ let triageAngerCount = parseInt(localStorage.getItem('triage_anger') || '0');
 let triageTotal      = parseInt(localStorage.getItem('triage_total') || '0');
 let latestProcessedTicket = null;
 let latestProcessedResult = null;
+let previewSelectedId = null;
 
 function renderIncomingQueue() {
   const el = document.getElementById('incoming-queue');
@@ -31,7 +32,7 @@ function renderIncomingQueue() {
   }
 
   el.innerHTML = incomingQueue.map((item, idx) => `
-    <div class="queue-item ${idx === 0 ? 'next' : ''}" style="cursor:pointer" onclick="processQueueItem('${item.id}', this)">
+    <div class="queue-item ${(idx === 0 || item.id === previewSelectedId) ? 'next' : ''}" style="cursor:pointer" onclick="previewQueueItem('${item.id}')">
       <div class="qi-dot" style="background:${idx === 0 ? 'var(--green)' : 'var(--text3)'}"></div>
       <div class="qi-body">
         <div class="qi-user">${item.user}
@@ -61,17 +62,27 @@ async function processNext() {
   await processTicket(incomingQueue[0]);
 }
 
-function processQueueItem(ticketId, el) {
+// Clicking a queue item only PREVIEWS it - shows the analysis without
+// removing it from the queue or counting it as processed. Only the
+// "Process Next with AI" button actually finishes/removes a ticket.
+async function previewQueueItem(ticketId) {
   const ticket = incomingQueue.find(q => q.id === ticketId);
   if (!ticket) return;
 
-  if (el) {
-    el.classList.add('next');
-    el.style.pointerEvents = 'none';
-    el.style.opacity = '0.7';
+  previewSelectedId = ticketId;
+  renderIncomingQueue();
+
+  let result;
+  try {
+    result = await getTriageResult(ticket);
+  } catch (e) {
+    console.log('Could not load real triage result:', e.message);
+    result = unavailableResult();
   }
 
-  processTicket(ticket);
+  latestProcessedTicket = ticket;
+  latestProcessedResult = result;
+  showLatestResult(ticket, result);
 }
 
 async function processTicket(ticket) {
@@ -219,6 +230,7 @@ function triagePanelResolve(backendId) {
   if (!t) return;
   selectedTicket = t;
   resolveTicket();
+  removeFromQueueById(backendId);
   if (latestProcessedTicket) showLatestResult(latestProcessedTicket, latestProcessedResult);
 }
 
@@ -227,7 +239,15 @@ async function triagePanelEscalate(backendId) {
   if (!t) return;
   selectedTicket = t;
   await escalateTicket();
+  removeFromQueueById(backendId);
   if (latestProcessedTicket) showLatestResult(latestProcessedTicket, latestProcessedResult);
+}
+
+function removeFromQueueById(backendId) {
+  const idx = incomingQueue.findIndex(q => q.id === ('#' + backendId));
+  if (idx !== -1) incomingQueue.splice(idx, 1);
+  if (previewSelectedId === ('#' + backendId)) previewSelectedId = null;
+  renderIncomingQueue();
 }
 
 function addProcessedTicket(ticket, result) {
