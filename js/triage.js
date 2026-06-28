@@ -12,6 +12,7 @@ let triageTotal      = parseInt(localStorage.getItem('triage_total') || '0');
 let latestProcessedTicket = null;
 let latestProcessedResult = null;
 let previewSelectedId = null;
+let triageMsgExpanded = false;
 
 function renderIncomingQueue() {
   const el = document.getElementById('incoming-queue');
@@ -170,7 +171,10 @@ function unavailableResult() {
     summary: 'Triage unavailable', auto_resolvable: false, _isRealAI: false
   };
 }
-
+function toggleMsgExpand() {
+  triageMsgExpanded = !triageMsgExpanded;
+  if (latestProcessedTicket) showLatestResult(latestProcessedTicket, latestProcessedResult);
+}
 function showLatestResult(ticket, r) {
   const el = document.getElementById('latest-result');
   if (!el) return;
@@ -197,7 +201,10 @@ function showLatestResult(ticket, r) {
           }
         </div>
       </div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.55;background:var(--bg3);padding:10px 12px;border-radius:8px;margin-bottom:12px">${ticket.msg}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.55;background:var(--bg3);padding:10px 12px;border-radius:8px;margin-bottom:12px">
+        <span>${ (ticket.msg && ticket.msg.length > 180 && !triageMsgExpanded) ? ticket.msg.substring(0, 180) + '…' : (ticket.msg || '') }</span>
+        ${ (ticket.msg && ticket.msg.length > 180) ? `<button onclick="toggleMsgExpand()" style="display:block;margin-top:6px;background:none;border:none;color:var(--green);font-size:11px;cursor:pointer;padding:0">${triageMsgExpanded ? 'Show less' : 'Show more'}</button>` : '' }
+      </div>
       ${r.anger_detected ? '<div style="background:var(--rdim);border:1px solid rgba(240,82,82,.25);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);margin-bottom:12px">⚠️ Anger detected — priority handling required</div>' : ''}
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
         <span class="tag ${tagMap[r.category]||'tag-confusion'}">${r.category}</span>
