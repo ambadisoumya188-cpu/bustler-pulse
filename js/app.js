@@ -360,7 +360,7 @@ function initApp() {
   renderDashboard();
   renderIncomingQueue();
   updateSidebarBadges();
-  renderIncomingQueue();
+  checkFeedbackBadge();
 
   // Then fetch real tickets from backend
   fetchRealTickets();
