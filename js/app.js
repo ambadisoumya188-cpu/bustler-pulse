@@ -94,7 +94,7 @@ async function fetchRealTickets() {
         incomingQueue.push({
           id:   '#' + realTicket._backend_id,
           user: realTicket.user || 'Unknown User',
-          msg:  realTicket.title || realTicket.description || 'New complaint',
+          msg:  realTicket.message || realTicket.description || 'New complaint',
           time: 'Just now',
           // Real triage fields, already auto-triaged server-side by Adhilekshmi's
           // backend — triage.js reads these directly instead of calling any AI itself.
