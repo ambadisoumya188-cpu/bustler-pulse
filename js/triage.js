@@ -187,7 +187,7 @@ function showLatestResult(ticket, r) {
   const backendId = ticket._backend_id;
   const matchedTicket = backendId ? TICKETS.find(t => String(t._backend_id) === String(backendId)) : null;
   const alreadyResolved  = matchedTicket && matchedTicket.status === 'resolved';
-  const alreadyEscalated = matchedTicket && matchedTicket.category === 'Dispute';
+  const alreadyEscalated = matchedTicket && matchedTicket._escalated === true;
 
   el.innerHTML = `
     <div style="animation:fadeUp .3s ease">

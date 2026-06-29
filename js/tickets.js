@@ -245,6 +245,7 @@ async function escalateTicket() {
         selectedTicket.route     = 'dispute';
         selectedTicket.status    = 'progress';
         selectedTicket.agent     = 'Anjali P Remesh';
+        selectedTicket._escalated = true;
 
       } else if (res.status === 400) {
         alert('⚠️ This ticket is already resolved and cannot be escalated.');
