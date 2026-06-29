@@ -201,7 +201,7 @@ function showLatestResult(ticket, r) {
           }
         </div>
       </div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.55;background:var(--bg3);padding:10px 12px;border-radius:8px;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--text2);line-height:1.55;background:var(--bg3);padding:10px 12px;border-radius:8px;margin-bottom:12px">${ticket.msg}</div>
         <span>${ (ticket.msg && ticket.msg.length > 180 && !triageMsgExpanded) ? ticket.msg.substring(0, 180) + '…' : (ticket.msg || '') }</span>
         ${ (ticket.msg && ticket.msg.length > 180) ? `<button onclick="toggleMsgExpand()" style="display:block;margin-top:6px;background:none;border:none;color:var(--green);font-size:11px;cursor:pointer;padding:0">${triageMsgExpanded ? 'Show less' : 'Show more'}</button>` : '' }
       </div>
