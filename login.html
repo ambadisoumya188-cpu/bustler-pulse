@@ -261,7 +261,10 @@
           const data = await response.json().catch(() => ({}));
           let errorText = 'Could not create account. Username may already be taken.';
           if (Array.isArray(data.detail)) {
-            errorText = data.detail.map(d => d.msg || JSON.stringify(d)).join(', ');
+            errorText = data.detail.map(d => {
+              const field = d.loc ? d.loc[d.loc.length - 1] : 'field';
+              return field + ': ' + (d.msg || 'invalid');
+            }).join(', ');
           } else if (typeof data.detail === 'string') {
             errorText = data.detail;
           } else if (data.message) {
