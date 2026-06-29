@@ -259,7 +259,15 @@
           }, 1200);
         } else {
           const data = await response.json().catch(() => ({}));
-          showError(data.detail || data.message || 'Could not create account. Username may already be taken.');
+          let errorText = 'Could not create account. Username may already be taken.';
+          if (Array.isArray(data.detail)) {
+            errorText = data.detail.map(d => d.msg || JSON.stringify(d)).join(', ');
+          } else if (typeof data.detail === 'string') {
+            errorText = data.detail;
+          } else if (data.message) {
+            errorText = data.message;
+          }
+          showError(errorText);
         }
       } catch (err) {
         showError('Registration service unavailable. Please try again later.');
