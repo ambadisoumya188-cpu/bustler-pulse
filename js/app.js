@@ -50,6 +50,21 @@ function checkFeedbackBadge() {
     })
     .catch(() => {});
 }
+function applyLoggedInUser() {
+  const username = (typeof getUser === 'function') ? getUser() : 'Ops Agent';
+
+  const nameEl = document.querySelector('.agent-name');
+  if (nameEl) nameEl.textContent = username;
+
+  const avatarEl = document.querySelector('.agent-av');
+  if (avatarEl) {
+    const initials = username.split(/[\s_]+/).filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    avatarEl.textContent = initials || 'OA';
+  }
+
+  const subEl = document.getElementById('page-sub');
+  if (subEl) subEl.textContent = 'Welcome back, ' + username + ' — here\'s today\'s overview';
+}
 
 // ── CLOCK ──
 function updateClock() {
@@ -264,7 +279,7 @@ function showPage(name, btn) {
   };
 
   const subs = {
-    dashboard: "Welcome back, Ambadi — here's today's overview",
+    dashboard: "Welcome back, " + ((typeof getUser === 'function') ? getUser() : 'Ambadi') + " — here's today's overview",
     tickets:   'Manage and resolve incoming user tickets',
     triage:    'Complaints arrive automatically — AI classifies and routes them',
     agents:    'Live performance profiles — updates every time a ticket is resolved',
@@ -349,6 +364,7 @@ function startAutoRefresh() {
 function initApp() {
    requestNotificationPermission();
   loadAgentStats();
+  applyLoggedInUser();
 
   // Load saved theme
   const savedTheme = localStorage.getItem('bustler-theme') || 'dark';
