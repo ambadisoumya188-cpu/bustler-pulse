@@ -220,7 +220,7 @@ html, body {
    TRIAGE PAGE
    ══════════════════════════════════════ */
 .triage-wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
-.ai-btn { width: 100%; padding: 12px; background: var(--green); color: #000; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; border: none; border-radius: 10px; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.ai-btn { width: auto; min-width: 220px; padding: 12px 24px; background: var(--green); color: #000; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; border: none; border-radius: 10px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .ai-btn:hover { opacity: .9; }
 .ai-btn:disabled { background: var(--bg4); color: var(--text3); cursor: not-allowed; }
 
