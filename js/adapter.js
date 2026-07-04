@@ -210,7 +210,7 @@ function formatTime(timestamp) {
       const parts = timestamp.split('/');
       return parts[0] + '/' + parts[1] + '/' + parts[2];
     }
-    const date = new Date(timestamp);
+    const date = new Date(timestamp.includes('Z') || timestamp.includes('+') ? timestamp : timestamp + 'Z');
     const now   = new Date();
     const diff  = Math.floor((now - date) / 60000);
     if (diff < 1)  return 'Just now';
