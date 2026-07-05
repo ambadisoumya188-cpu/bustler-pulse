@@ -34,7 +34,7 @@ export default function AllTickets({ ticketStore }) {
     if (!selected) return;
     await resolveTicket(selected);
     alert(`✓ Ticket ${selected.id} resolved!\n→ ${selected.agent}'s profile updated`);
-    setSelected(null);
+    setSelected(prev => ({ ...prev, status: 'resolved' }));
   };
 
   const handleEscalate = async () => {
