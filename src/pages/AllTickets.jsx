@@ -36,7 +36,6 @@ export default function AllTickets({ ticketStore }) {
   const handleResolve = async () => {
     if (!selected) return;
     await resolveTicket(selected);
-    alert(`✓ Ticket ${selected.id} resolved!\n→ ${selected.agent}'s profile updated`);
   };
 
   const handleEscalate = async () => {
