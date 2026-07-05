@@ -120,7 +120,9 @@ export default function AllTickets({ ticketStore }) {
               </div>
             </div>
             <div className="dp-actions">
-              <button className="btn-resolve" onClick={handleResolve} disabled={selected.status==='resolved'}>✓ Mark as Resolved</button>
+              <button className="btn-resolve" onClick={handleResolve} disabled={selected.status==='resolved'}>
+  {selected.status === 'resolved' ? '✓ Resolved' : '✓ Mark as Resolved'}
+</button>
               {selected.status!=='resolved'&&selected.category!=='Dispute'&&!selected._escalated&&(
                 <button className="btn-escalate" onClick={handleEscalate}>⚡ Escalate</button>
               )}
