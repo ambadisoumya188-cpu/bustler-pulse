@@ -11,7 +11,10 @@ export default function AllTickets({ ticketStore }) {
   const { tickets, resolveTicket, escalateTicket } = ticketStore;
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+
+  // Always look up the ticket live from tickets array so status updates reflect instantly
+  const selected = selectedId ? tickets.find(t => t.id === selectedId) : null;
 
   const sorted = [...tickets].sort((a, b) => {
     const na = parseInt((a.id||'0').toString().replace(/\D/g,''));
@@ -33,13 +36,13 @@ export default function AllTickets({ ticketStore }) {
   const handleResolve = async () => {
     if (!selected) return;
     await resolveTicket(selected);
-    setSelected(prev => ({ ...prev, status: 'resolved' }));
     alert(`✓ Ticket ${selected.id} resolved!\n→ ${selected.agent}'s profile updated`);
   };
+
   const handleEscalate = async () => {
     if (!selected) return;
     const ok = await escalateTicket(selected);
-    if (ok) { alert('⚡ Ticket escalated to Anjali P Remesh.'); setSelected(null); }
+    if (ok) { alert('⚡ Ticket escalated to Anjali P Remesh.'); setSelectedId(null); }
   };
 
   return (
@@ -65,7 +68,7 @@ export default function AllTickets({ ticketStore }) {
             No tickets found
           </div>
         ):filtered.map(t=>(
-          <div key={t.id} className={`ticket-card ${getCardUrg(t.urgency_score)}`} onClick={()=>setSelected(t)}>
+          <div key={t.id} className={`ticket-card ${getCardUrg(t.urgency_score)}`} onClick={()=>setSelectedId(t.id)}>
             <div className="tc-id">{t.id}</div>
             <div className="tc-body">
               <div className="tc-title">{t.title}</div>
@@ -84,9 +87,9 @@ export default function AllTickets({ ticketStore }) {
       </div>
 
       {selected&&(
-        <div className="detail-overlay show" onClick={e=>{if(e.target.classList.contains('detail-overlay'))setSelected(null);}}>
+        <div className="detail-overlay show" onClick={e=>{if(e.target.classList.contains('detail-overlay'))setSelectedId(null);}}>
           <div className="detail-panel">
-            <div className="dp-close"><button onClick={()=>setSelected(null)}>✕ Close</button></div>
+            <div className="dp-close"><button onClick={()=>setSelectedId(null)}>✕ Close</button></div>
             <div className="dp-id">{selected.id} · {selected.time}</div>
             <div className="dp-title">{selected.title}</div>
             <div className="dp-tags">
@@ -120,12 +123,12 @@ export default function AllTickets({ ticketStore }) {
             </div>
             <div className="dp-actions">
               <button className="btn-resolve" onClick={handleResolve} disabled={selected.status==='resolved'}>
-  {selected.status === 'resolved' ? '✓ Resolved' : '✓ Mark as Resolved'}
-</button>
+                {selected.status==='resolved' ? '✓ Resolved' : '✓ Mark as Resolved'}
+              </button>
               {selected.status!=='resolved'&&selected.category!=='Dispute'&&!selected._escalated&&(
                 <button className="btn-escalate" onClick={handleEscalate}>⚡ Escalate</button>
               )}
-              <button className="btn-cancel" onClick={()=>setSelected(null)}>Cancel</button>
+              <button className="btn-cancel" onClick={()=>setSelectedId(null)}>Cancel</button>
             </div>
           </div>
         </div>
